@@ -15,25 +15,33 @@ final class LaunchdService {
 
     func install(task: ClaudeTask) {
         guard task.isEnabled else {
-            uninstall(taskId: task.id)
+            uninstall(task: task)
             return
         }
 
-        let label = plistLabel(for: task.id)
-        let plistPath = plistPath(for: task.id)
+        let label = plistLabel(for: task)
+        let path = plistPath(for: task)
 
         unload(label: label)
 
-        let plist = buildPlist(task: task, label: label)
+        let plist = buildPlist(task: task)
 
         let data = try? PropertyListSerialization.data(
             fromPropertyList: plist,
             format: .xml,
             options: 0
         )
-        try? data?.write(to: URL(fileURLWithPath: plistPath))
+        try? data?.write(to: URL(fileURLWithPath: path))
 
-        load(plistPath: plistPath)
+        load(plistPath: path)
+    }
+
+    func uninstall(task: ClaudeTask) {
+        let label = plistLabel(for: task)
+        let path = plistPath(for: task)
+
+        unload(label: label)
+        try? FileManager.default.removeItem(atPath: path)
     }
 
     func uninstall(taskId: UUID) {
@@ -48,11 +56,11 @@ final class LaunchdService {
         let descriptor = FetchDescriptor<ClaudeTask>()
         guard let tasks = try? modelContext.fetch(descriptor) else { return }
 
-        let validIds = Set(tasks.map { plistLabel(for: $0.id) })
+        let validLabels = Set(tasks.map { plistLabel(for: $0) })
         if let files = try? FileManager.default.contentsOfDirectory(atPath: launchAgentsDir) {
             for file in files where file.hasPrefix(plistPrefix) && file.hasSuffix(".plist") {
                 let label = String(file.dropLast(6))
-                if !validIds.contains(label) {
+                if !validLabels.contains(label) {
                     unload(label: label)
                     try? FileManager.default.removeItem(
                         atPath: (launchAgentsDir as NSString).appendingPathComponent(file)
@@ -65,23 +73,24 @@ final class LaunchdService {
             if task.isEnabled {
                 install(task: task)
             } else {
-                uninstall(taskId: task.id)
+                uninstall(task: task)
             }
         }
     }
 
     // MARK: - Build plist dictionary
 
-    func buildPlist(task: ClaudeTask, label: String) -> [String: Any] {
+    func buildPlist(task: ClaudeTask) -> [String: Any] {
+        let label = plistLabel(for: task)
         let appPath = Bundle.main.executablePath ?? "/usr/local/bin/ClaudeCron"
         let schedule = task.schedule
         let calendar = Calendar.current
 
         var plist: [String: Any] = [
             "Label": label,
-            "ProgramArguments": [appPath, "--run-task", task.id.uuidString],
-            "StandardOutPath": logPath(for: task.id, stream: "stdout"),
-            "StandardErrorPath": logPath(for: task.id, stream: "stderr"),
+            "ProgramArguments": [appPath, "--run-task", "--source-folder", task.sourceFolder, "--task-id", task.taskId],
+            "StandardOutPath": logPath(for: task, stream: "stdout"),
+            "StandardErrorPath": logPath(for: task, stream: "stderr"),
             "RunAtLoad": false,
         ]
 
@@ -150,6 +159,18 @@ final class LaunchdService {
 
     // MARK: - Helpers
 
+    func plistLabel(for task: ClaudeTask) -> String {
+        let key = task.compositeKey
+        let hashValue = key.utf8.reduce(into: UInt64(5381)) { hash, byte in
+            hash = hash &* 33 &+ UInt64(byte)
+        }
+        return "\(plistPrefix)\(String(hashValue, radix: 16))"
+    }
+
+    private func plistPath(for task: ClaudeTask) -> String {
+        (launchAgentsDir as NSString).appendingPathComponent("\(plistLabel(for: task)).plist")
+    }
+
     private func plistLabel(for taskId: UUID) -> String {
         "\(plistPrefix)\(taskId.uuidString)"
     }
@@ -162,10 +183,11 @@ final class LaunchdService {
         (launchAgentsDir as NSString).appendingPathComponent("\(label).plist")
     }
 
-    private func logPath(for taskId: UUID, stream: String) -> String {
+    private func logPath(for task: ClaudeTask, stream: String) -> String {
         let logsDir = NSHomeDirectory() + "/Library/Logs/ClaudeCron"
         try? FileManager.default.createDirectory(atPath: logsDir, withIntermediateDirectories: true)
-        return (logsDir as NSString).appendingPathComponent("\(taskId.uuidString)-\(stream).log")
+        let label = plistLabel(for: task)
+        return (logsDir as NSString).appendingPathComponent("\(label)-\(stream).log")
     }
 
     // MARK: - Manual trigger (run immediately, bypassing schedule)
@@ -175,7 +197,7 @@ final class LaunchdService {
         modelContext.insert(run)
         try? modelContext.save()
 
-        run.log("Task: \(task.name) (id: \(task.id.uuidString))")
+        run.log("Task: \(task.name) (id: \(task.compositeKey))")
         run.log("Prompt: \(task.prompt)")
         run.log("Model: \(task.model), Permissions: \(task.permissionMode)")
         run.log("Session mode: \(task.sessionMode)")

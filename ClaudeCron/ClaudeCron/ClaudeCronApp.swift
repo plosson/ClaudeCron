@@ -22,11 +22,25 @@ struct ClaudeCronApp: App {
 
     init() {
         let args = CommandLine.arguments
-        if let idx = args.firstIndex(of: "--run-task"),
-           idx + 1 < args.count {
-            let taskIdString = args[idx + 1]
+        if args.contains("--run-task") {
             cliMode = true
-            runTaskHeadless(taskId: taskIdString)
+            // New format: --run-task --source-folder <folder> --task-id <id>
+            if let folderIdx = args.firstIndex(of: "--source-folder"),
+               folderIdx + 1 < args.count,
+               let idIdx = args.firstIndex(of: "--task-id"),
+               idIdx + 1 < args.count {
+                let folder = args[folderIdx + 1]
+                let taskId = args[idIdx + 1]
+                runTaskHeadless(sourceFolder: folder, taskId: taskId)
+            } else if let idx = args.firstIndex(of: "--run-task"),
+                      idx + 1 < args.count,
+                      args[idx + 1] != "--source-folder" {
+                // Legacy format: --run-task <UUID>
+                runTaskHeadlessLegacy(taskId: args[idx + 1])
+            } else {
+                print("Usage: --run-task --source-folder <folder> --task-id <id>")
+                exit(1)
+            }
         }
     }
 
@@ -44,7 +58,22 @@ struct ClaudeCronApp: App {
         }
     }
 
-    private func runTaskHeadless(taskId: String) {
+    private func runTaskHeadless(sourceFolder: String, taskId: String) {
+        let container = Self.sharedContainer
+        let context = container.mainContext
+        let descriptor = FetchDescriptor<ClaudeTask>(
+            predicate: #Predicate { $0.sourceFolder == sourceFolder && $0.taskId == taskId }
+        )
+        guard let task = try? context.fetch(descriptor).first else {
+            print("Task not found: \(sourceFolder)::\(taskId)")
+            exit(1)
+        }
+        LaunchdService.shared.triggerNow(task: task, modelContext: context, onDone: { exitCode in
+            exit(exitCode == 0 ? 0 : 1)
+        })
+    }
+
+    private func runTaskHeadlessLegacy(taskId: String) {
         guard let uuid = UUID(uuidString: taskId) else {
             print("Invalid task ID: \(taskId)")
             exit(1)
