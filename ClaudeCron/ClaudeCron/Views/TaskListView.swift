@@ -5,6 +5,7 @@ struct TaskListView: View {
     @Query(sort: \ClaudeTask.createdAt, order: .reverse) private var tasks: [ClaudeTask]
     @Binding var selectedTask: ClaudeTask?
     @Binding var showingNewTask: Bool
+    @Binding var showingSettings: Bool
 
     var body: some View {
         List(selection: $selectedTask) {
@@ -19,6 +20,22 @@ struct TaskListView: View {
                 Button(action: { showingNewTask = true }) {
                     Image(systemName: "plus")
                 }
+                .keyboardShortcut("n", modifiers: .command)
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 0) {
+                Divider()
+                HStack(spacing: 12) {
+                    Button(action: { showingSettings = true }) {
+                        Label("Settings", systemImage: "gear")
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                    Spacer()
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
             }
         }
         .navigationTitle("Tasks")

@@ -10,6 +10,10 @@ struct TaskDetailView: View {
         task.runs.sorted { $0.startedAt > $1.startedAt }
     }
 
+    var upcomingRuns: [Date] {
+        ScheduleCalculator.nextRuns(for: task.schedule, count: 3)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header toolbar
@@ -92,12 +96,60 @@ struct TaskDetailView: View {
             }
             .padding(.horizontal)
 
-            Spacer()
+            Divider().padding(.vertical, 4)
+
+            // Runs list
+            List(selection: $selectedRun) {
+                if !upcomingRuns.isEmpty {
+                    Section("Upcoming") {
+                        ForEach(upcomingRuns, id: \.self) { date in
+                            HStack {
+                                Image(systemName: "clock")
+                                    .foregroundStyle(.secondary)
+                                Text(date, format: .dateTime.month().day().hour().minute())
+                                Spacer()
+                                Text("UPCOMING")
+                                    .font(.caption2.bold())
+                                    .foregroundStyle(.orange)
+                            }
+                        }
+                    }
+                }
+
+                Section("Completed") {
+                    ForEach(sortedRuns) { run in
+                        RunRowView(run: run)
+                            .tag(run)
+                    }
+                }
+            }
         }
     }
 
     private func deleteTask() {
         modelContext.delete(task)
         try? modelContext.save()
+    }
+}
+
+struct RunRowView: View {
+    let run: TaskRun
+
+    var body: some View {
+        HStack {
+            Text(run.task?.name ?? "")
+            Text(run.startedAt, format: .dateTime.month().day().hour().minute().second())
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Text(run.runStatus.rawValue)
+                .font(.caption2.bold())
+                .foregroundStyle(run.runStatus == .succeeded ? .green : run.runStatus == .failed ? .red : .blue)
+            if let d = run.duration {
+                Text("Duration: \(Int(d))s")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 }

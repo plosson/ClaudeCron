@@ -6,14 +6,33 @@ struct ContentView: View {
     @State private var selectedTask: ClaudeTask?
     @State private var selectedRun: TaskRun?
     @State private var showingNewTask = false
+    @State private var showingSettings = false
     @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         NavigationSplitView {
-            TaskListView(selectedTask: $selectedTask, showingNewTask: $showingNewTask)
-                .frame(minWidth: 220)
+            TaskListView(
+                selectedTask: $selectedTask,
+                showingNewTask: $showingNewTask,
+                showingSettings: $showingSettings
+            )
+            .frame(minWidth: 220)
         } content: {
-            if let task = selectedTask {
+            if showingSettings {
+                SettingsView(onClose: { showingSettings = false })
+            } else if showingNewTask {
+                TaskFormView(
+                    onSave: { task in
+                        modelContext.insert(task)
+                        try? modelContext.save()
+                        LaunchdService.shared.install(task: task)
+                        selectedTask = task
+                        showingNewTask = false
+                    },
+                    onCancel: { showingNewTask = false }
+                )
+                .frame(minWidth: 350)
+            } else if let task = selectedTask {
                 TaskDetailView(task: task, selectedRun: $selectedRun)
                     .frame(minWidth: 300)
             } else {
