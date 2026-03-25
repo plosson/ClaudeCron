@@ -284,7 +284,153 @@ enum CLIHandler {
 
     // MARK: - Command stubs (implemented in subsequent tasks)
 
-    static func cmdCreate(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
+    static func cmdCreate(subargs: [String], container: ModelContainer) {
+        // First positional arg is the task name
+        guard let name = subargs.first, !name.hasPrefix("--") else {
+            printError("Usage: ccron create <name> --prompt <text> [options]")
+            exit(1)
+        }
+
+        guard let prompt = flagValue("--prompt", in: subargs) else {
+            printError("--prompt is required")
+            exit(1)
+        }
+
+        let taskId = slugify(name)
+        let isGlobal = flagValue("--scope", in: subargs) == "global"
+        let sourceFolder = isGlobal ? NSHomeDirectory() : (flagValue("--directory", in: subargs) ?? FileManager.default.currentDirectoryPath)
+        let directory = flagValue("--directory", in: subargs) ?? (isGlobal ? FileManager.default.currentDirectoryPath : sourceFolder)
+
+        let modelStr = flagValue("--model", in: subargs) ?? "sonnet"
+        let permissionsStr = flagValue("--permissions", in: subargs) ?? "default"
+        let sessionMode: SessionMode = flagValue("--session-mode", in: subargs).flatMap({ mapSessionMode($0) }) ?? .new
+
+        // Build schedule
+        let schedule = parseSchedule(from: subargs)
+
+        // Check for conflicts
+        let context = ModelContext(container)
+        let checkFolder = isGlobal ? NSHomeDirectory() : sourceFolder
+        let descriptor = FetchDescriptor<ClaudeTask>(
+            predicate: #Predicate { $0.sourceFolder == checkFolder && $0.taskId == taskId }
+        )
+        if let existing = try? context.fetch(descriptor), !existing.isEmpty {
+            printError("Task '\(taskId)' already exists in \(displayFolder(checkFolder))")
+            exit(1)
+        }
+
+        // Create task
+        let task = ClaudeTask(
+            name: name,
+            prompt: prompt,
+            directory: directory,
+            model: ClaudeModel(rawValue: modelStr) ?? .sonnet,
+            permissionMode: PermissionMode(rawValue: permissionsStr) ?? .default_,
+            schedule: schedule,
+            isEnabled: true,
+            sessionMode: sessionMode,
+            allowedTools: flagValue("--allowed-tools", in: subargs) ?? "",
+            disallowedTools: flagValue("--disallowed-tools", in: subargs) ?? "",
+            notifyOnStart: hasFlag("--notify-start", in: subargs),
+            notifyOnEnd: !hasFlag("--no-notify-end", in: subargs)
+        )
+        task.taskId = taskId
+        task.sourceFolder = isGlobal ? NSHomeDirectory() : sourceFolder
+
+        // Register folder if local
+        if !isGlobal {
+            let registry = FolderRegistry()
+            registry.add(sourceFolder)
+        }
+
+        context.insert(task)
+        try? context.save()
+
+        // Persist to JSON
+        let folder = task.sourceFolder
+        var settings = ConfigService.shared.read(folder: folder)
+        settings.tasks[task.taskId] = task.toTaskDefinition(isGlobal: isGlobal)
+        try? ConfigService.shared.write(settings, to: folder)
+
+        // Install launchd
+        LaunchdService.shared.install(task: task)
+
+        print("Created task '\(task.name)' (\(task.taskId)) in \(displayFolder(folder))")
+        print("Schedule: \(task.schedule.displaySummary)")
+    }
+
+    /// Map short session mode names to internal SessionMode values
+    static func mapSessionMode(_ value: String) -> SessionMode? {
+        switch value.lowercased() {
+        case "new": return .new
+        case "resume": return .resume
+        case "fork": return .fork
+        default: return nil
+        }
+    }
+
+    /// Parse schedule options from args
+    static func parseSchedule(from args: [String]) -> TaskSchedule {
+        var schedule = TaskSchedule()
+        let typeStr = flagValue("--schedule", in: args) ?? "manual"
+
+        switch typeStr.lowercased() {
+        case "manual":
+            schedule.type = .manual
+        case "daily":
+            schedule.type = .daily
+            if let timeStr = flagValue("--time", in: args) {
+                schedule.time = parseTime(timeStr)
+            }
+        case "weekly":
+            schedule.type = .weekly
+            if let timeStr = flagValue("--time", in: args) {
+                schedule.time = parseTime(timeStr)
+            }
+            if let daysStr = flagValue("--weekdays", in: args) {
+                schedule.weekdays = parseWeekdays(daysStr)
+            }
+        case "monthly":
+            schedule.type = .monthly
+            if let timeStr = flagValue("--time", in: args) {
+                var time = parseTime(timeStr)
+                if let dayStr = flagValue("--day", in: args), let day = Int(dayStr) {
+                    var comps = Calendar.current.dateComponents([.hour, .minute], from: time)
+                    comps.day = day
+                    time = Calendar.current.date(from: comps) ?? time
+                }
+                schedule.time = time
+            }
+        case "interval":
+            schedule.type = .interval
+            if let minStr = flagValue("--interval", in: args), let mins = Int(minStr) {
+                schedule.intervalMinutes = mins
+            }
+        default:
+            printError("Unknown schedule type: \(typeStr)")
+            exit(1)
+        }
+
+        return schedule
+    }
+
+    /// Parse "HH:MM" to a Date with those hour/minute components
+    static func parseTime(_ str: String) -> Date {
+        let parts = str.split(separator: ":").compactMap { Int($0) }
+        guard parts.count == 2 else {
+            printError("Invalid time format: \(str). Use HH:MM")
+            exit(1)
+        }
+        let comps = DateComponents(hour: parts[0], minute: parts[1])
+        return Calendar.current.date(from: comps) ?? Date()
+    }
+
+    /// Parse "mon,tue,wed" to Set<Int> (1=Sunday, 7=Saturday)
+    static func parseWeekdays(_ str: String) -> Set<Int> {
+        let map = ["sun": 1, "mon": 2, "tue": 3, "wed": 4, "thu": 5, "fri": 6, "sat": 7]
+        let days = str.lowercased().split(separator: ",").compactMap { map[String($0).trimmingCharacters(in: .whitespaces)] }
+        return Set(days)
+    }
     static func cmdEdit(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
     static func cmdDelete(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
     static func cmdEnable(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
