@@ -23,7 +23,7 @@ struct ScheduleCalculator {
                 let m = calendar.component(.minute, from: schedule.time)
                 let weekday = calendar.component(.weekday, from: candidate)
                 if schedule.weekdays.contains(weekday) {
-                    var next = calendar.date(bySettingHour: h, minute: m, second: 0, of: candidate)!
+                    let next = calendar.date(bySettingHour: h, minute: m, second: 0, of: candidate)!
                     if next > Date() && !dates.contains(next) { dates.append(next) }
                 }
                 candidate = calendar.date(byAdding: .day, value: 1, to: candidate)!
