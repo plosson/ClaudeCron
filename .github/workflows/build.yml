@@ -54,11 +54,38 @@ jobs:
 
       - name: Code sign
         run: |
+          IDENTITY="Developer ID Application: SPRL Losson (427N276E3Q)"
+          APP="build/release/Claude Cron.app"
+
+          # Sign all nested binaries (Sparkle framework components) first
+          find "$APP/Contents/Frameworks" -type f -perm +111 | while read binary; do
+            codesign --force --options runtime \
+              --sign "$IDENTITY" --timestamp "$binary" || true
+          done
+
+          # Sign XPC services
+          find "$APP/Contents/Frameworks" -name "*.xpc" -type d | while read xpc; do
+            codesign --force --options runtime \
+              --sign "$IDENTITY" --timestamp "$xpc"
+          done
+
+          # Sign embedded apps (Sparkle Updater.app)
+          find "$APP/Contents/Frameworks" -name "*.app" -type d | while read app; do
+            codesign --force --options runtime \
+              --sign "$IDENTITY" --timestamp "$app"
+          done
+
+          # Sign the framework itself
+          find "$APP/Contents/Frameworks" -name "*.framework" -type d | while read fw; do
+            codesign --force --options runtime \
+              --sign "$IDENTITY" --timestamp "$fw"
+          done
+
+          # Sign the main app bundle
           codesign --force --options runtime \
-            --sign "Developer ID Application: SPRL Losson (427N276E3Q)" \
+            --sign "$IDENTITY" \
             --entitlements ClaudeCron/ClaudeCron/ClaudeCron.entitlements \
-            --timestamp \
-            "build/release/Claude Cron.app"
+            --timestamp "$APP"
 
       - name: Create DMG
         run: |
