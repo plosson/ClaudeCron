@@ -98,6 +98,64 @@ jobs:
           fi
           xcrun stapler staple build/ClaudeCron-*.dmg
 
+      - name: Sign update with Sparkle EdDSA
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          VERSION=$(git describe --tags --abbrev=0 | sed 's/^v//')
+          DMG="build/ClaudeCron-${VERSION}.dmg"
+
+          # Find Sparkle's sign_update tool from the resolved SPM package
+          SIGN_UPDATE=$(find build/derived -name "sign_update" -type f | head -1)
+          if [ -z "$SIGN_UPDATE" ]; then
+            # Fallback: download Sparkle release and use its sign_update
+            curl -sL "https://github.com/sparkle-project/Sparkle/releases/latest/download/Sparkle-2.7.0.tar.xz" -o /tmp/sparkle.tar.xz
+            mkdir -p /tmp/sparkle && tar -xf /tmp/sparkle.tar.xz -C /tmp/sparkle
+            SIGN_UPDATE="/tmp/sparkle/bin/sign_update"
+          fi
+
+          # Generate EdDSA signature
+          SIGNATURE=$("$SIGN_UPDATE" "$DMG" --ed-key-file <(echo "$SPARKLE_PRIVATE_KEY") 2>/dev/null || echo "$SPARKLE_PRIVATE_KEY" | "$SIGN_UPDATE" "$DMG" -f -)
+          echo "SPARKLE_SIGNATURE=${SIGNATURE}" >> "$GITHUB_ENV"
+          echo "DMG_SIZE=$(stat -f%z "$DMG")" >> "$GITHUB_ENV"
+          echo "RELEASE_VERSION=${VERSION}" >> "$GITHUB_ENV"
+
+      - name: Update appcast.xml
+        run: |
+          VERSION="${RELEASE_VERSION}"
+          DMG_URL="https://github.com/plosson/ClaudeCron/releases/download/v${VERSION}/ClaudeCron-${VERSION}.dmg"
+          DATE=$(date -R)
+
+          # Build the new item XML
+          ITEM=$(cat <<ITEMEOF
+            <item>
+                <title>Version ${VERSION}</title>
+                <pubDate>${DATE}</pubDate>
+                <sparkle:version>${VERSION}</sparkle:version>
+                <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
+                <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+                <enclosure
+                    url="${DMG_URL}"
+                    ${SPARKLE_SIGNATURE}
+                    length="${DMG_SIZE}"
+                    type="application/octet-stream" />
+            </item>
+          ITEMEOF
+          )
+
+          # Insert the new item before </channel>
+          sed -i '' "s|</channel>|${ITEM}\n    </channel>|" appcast.xml
+
+      - name: Commit appcast.xml
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          git add appcast.xml
+          git commit -m "chore: update appcast.xml for v${RELEASE_VERSION}" || true
+          git push origin main
+
       - name: Upload artifact
         if: always()
         uses: actions/upload-artifact@v4

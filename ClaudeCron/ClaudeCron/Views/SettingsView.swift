@@ -5,6 +5,7 @@ struct SettingsView: View {
     @AppStorage("defaultWorkingDirectory") private var defaultWorkingDirectory = "~/Projects"
     @AppStorage("defaultModel") private var defaultModel = "sonnet"
     @AppStorage("autoScrollLogs") private var autoScrollLogs = true
+    @EnvironmentObject private var updateService: UpdateService
 
     var onClose: () -> Void
 
@@ -30,6 +31,20 @@ struct SettingsView: View {
                         Text("Use 24-hour format (14:30) instead of 12-hour (2:30 PM)")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                    }
+
+                    GroupBox("Updates") {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Toggle("Automatically check for updates", isOn: Binding(
+                                get: { updateService.automaticallyChecksForUpdates },
+                                set: { updateService.automaticallyChecksForUpdates = $0 }
+                            ))
+
+                            Button("Check for Updates Now") {
+                                updateService.checkForUpdates()
+                            }
+                            .disabled(!updateService.canCheckForUpdates)
+                        }
                     }
 
                     GroupBox("Advanced") {

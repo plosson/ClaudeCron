@@ -1,0 +1,9 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
+    <channel>
+        <title>Claude Cron</title>
+        <link>https://raw.githubusercontent.com/plosson/ClaudeCron/main/appcast.xml</link>
+        <description>Claude Cron updates</description>
+        <language>en</language>
+    </channel>
+</rss>

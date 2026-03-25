@@ -10,7 +10,9 @@
 		1881FE7ED1A517CB16E79412 /* TaskDefinitionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FB81ABB0C5F83DE0D28F0DB /* TaskDefinitionTests.swift */; };
 		2366E165597EDFFD013D54F2 /* ConfigService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 059D2B262A583D8C517A3E99 /* ConfigService.swift */; };
 		2ED122D3DA7B62F38ABF9818 /* ConfigServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006BCADAB8856CB240F6A86F /* ConfigServiceTests.swift */; };
+		2EE84F71C41E4C4D7BC706AB /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E577C863D472485AEDDD4C0 /* UpdateService.swift */; };
 		306600A8F2CA9CA7CFD6C156 /* ClaudeServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68BB63179E406FE40B33D92E /* ClaudeServiceTests.swift */; };
+		3574A2A8B2E83265DCBD06EE /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 7ACFA8D8290B144B239B5041 /* Sparkle */; };
 		3890B580928A7F949580D10A /* RunDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FAF49D140603D7962776ED5 /* RunDetailView.swift */; };
 		40420538147E209AE9FDB36A /* ScheduleCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0501F9EA91D0364250B8E49C /* ScheduleCalculatorTests.swift */; };
 		443191CD65C097182C6758E8 /* ClaudeCronApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14E1E45A615C704616A62CAF /* ClaudeCronApp.swift */; };
@@ -54,6 +56,7 @@
 		042D203EB9CFE9B28CBC98CD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0501F9EA91D0364250B8E49C /* ScheduleCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleCalculatorTests.swift; sourceTree = "<group>"; };
 		059D2B262A583D8C517A3E99 /* ConfigService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigService.swift; sourceTree = "<group>"; };
+		0CAF979E163509B52E87CF61 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		0E4BF8B563B68870E0BA6773 /* LaunchdService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchdService.swift; sourceTree = "<group>"; };
 		0EBEC258AAAB91E80832FDB4 /* ClaudeTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeTask.swift; sourceTree = "<group>"; };
 		14E1E45A615C704616A62CAF /* ClaudeCronApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeCronApp.swift; sourceTree = "<group>"; };
@@ -66,6 +69,7 @@
 		6104F1BA6C5D565A6CCF884B /* ConfigIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigIntegrationTests.swift; sourceTree = "<group>"; };
 		68BB63179E406FE40B33D92E /* ClaudeServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeServiceTests.swift; sourceTree = "<group>"; };
 		6C986CB49FCDD04CBF3DD8CF /* TaskRunTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRunTests.swift; sourceTree = "<group>"; };
+		6E577C863D472485AEDDD4C0 /* UpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateService.swift; sourceTree = "<group>"; };
 		763D465DC7B584A173260BF5 /* ClaudeCron.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClaudeCron.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		802D8AF02ADF5F375EA33F5D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		878D3387E71A23C164B000BA /* ClaudeCronTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClaudeCronTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -84,6 +88,17 @@
 		F899884301F4867CD0480FF3 /* TaskDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskDefinition.swift; sourceTree = "<group>"; };
 		FD019193EE833858E20AB800 /* ScheduleType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleType.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C6FB90720939022B2D3B907A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3574A2A8B2E83265DCBD06EE /* Sparkle in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		077AF8FE9FF893311352E089 /* Products */ = {
@@ -104,6 +119,7 @@
 				3209A3D4D0DE4E59CE9AFFB5 /* FolderRegistry.swift */,
 				0E4BF8B563B68870E0BA6773 /* LaunchdService.swift */,
 				C1A4BF17344041A70813A379 /* ScheduleCalculator.swift */,
+				6E577C863D472485AEDDD4C0 /* UpdateService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -123,6 +139,7 @@
 				042D203EB9CFE9B28CBC98CD /* Assets.xcassets */,
 				29514B78231156F4CF3E7F9B /* ClaudeCron.entitlements */,
 				14E1E45A615C704616A62CAF /* ClaudeCronApp.swift */,
+				0CAF979E163509B52E87CF61 /* Info.plist */,
 				887FCA31AB852EC9118A921F /* Models */,
 				3FC1B32035D1A14D38F2130D /* Services */,
 				FB8BBBFF264B1545DD71A1BF /* Views */,
@@ -200,6 +217,7 @@
 			buildPhases = (
 				2D1A215986E5DB7415F954A4 /* Sources */,
 				261844CD57965E722A12438D /* Resources */,
+				C6FB90720939022B2D3B907A /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -207,6 +225,7 @@
 			);
 			name = ClaudeCron;
 			packageProductDependencies = (
+				7ACFA8D8290B144B239B5041 /* Sparkle */,
 			);
 			productName = ClaudeCron;
 			productReference = 763D465DC7B584A173260BF5 /* ClaudeCron.app */;
@@ -232,6 +251,9 @@
 			);
 			mainGroup = 44FA5B7EA7CA0495554C94FC;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B45315D5A220483F1725ECB5 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 077AF8FE9FF893311352E089 /* Products */;
 			projectDirPath = "";
@@ -277,6 +299,7 @@
 				48ACB68ECC44934648AA2418 /* TaskFormView.swift in Sources */,
 				D23FD700BC6293E526BE91A6 /* TaskListView.swift in Sources */,
 				BAC9735A6F7A44A22A172BDE /* TaskRun.swift in Sources */,
+				2EE84F71C41E4C4D7BC706AB /* UpdateService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -372,10 +395,7 @@
 				CODE_SIGN_ENTITLEMENTS = ClaudeCron/ClaudeCron.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
-				INFOPLIST_KEY_NSHighResolutionCapable = YES;
+				INFOPLIST_FILE = ClaudeCron/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -479,10 +499,7 @@
 				CODE_SIGN_ENTITLEMENTS = ClaudeCron/ClaudeCron.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
-				INFOPLIST_KEY_NSHighResolutionCapable = YES;
+				INFOPLIST_FILE = ClaudeCron/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -547,6 +564,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B45315D5A220483F1725ECB5 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.7.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7ACFA8D8290B144B239B5041 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B45315D5A220483F1725ECB5 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 78DBDF6FF06CC4F09AC26610 /* Project object */;
 }

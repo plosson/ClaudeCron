@@ -5,6 +5,7 @@ import UserNotifications
 
 struct MenuBarView: View {
     @Query(sort: \ClaudeTask.createdAt) private var tasks: [ClaudeTask]
+    @EnvironmentObject private var updateService: UpdateService
     @State private var cliInstalled = false
 
     var body: some View {
@@ -17,6 +18,11 @@ struct MenuBarView: View {
         Button("Open Claude Cron") {
             NSApp.activate(ignoringOtherApps: true)
         }
+        Divider()
+        Button("Check for Updates...") {
+            updateService.checkForUpdates()
+        }
+        .disabled(!updateService.canCheckForUpdates)
         Divider()
         Button(cliInstalled
             ? "Uninstall Command Line Tool (ccron)"

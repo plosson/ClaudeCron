@@ -6,12 +6,28 @@ options:
   xcodeVersion: "16.0"
   createIntermediateGroups: true
 
+packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.7.0"
+
 targets:
   ClaudeCron:
     type: application
     platform: macOS
     sources:
       - ClaudeCron
+    dependencies:
+      - package: Sparkle
+    info:
+      path: ClaudeCron/Info.plist
+      properties:
+        LSApplicationCategoryType: "public.app-category.developer-tools"
+        NSHighResolutionCapable: true
+        SUPublicEDKey: "A/PM3ogaVd5PCLKDB/mdZCsd86Y8d/TBPryAcn0F1t8="
+        SUFeedURL: "https://raw.githubusercontent.com/plosson/ClaudeCron/main/appcast.xml"
+        SUEnableAutomaticChecks: true
+        SUScheduledCheckInterval: 86400
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.claudecron.app
@@ -21,10 +37,6 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "5.9"
         MACOSX_DEPLOYMENT_TARGET: "14.0"
-        INFOPLIST_FILE: ""
-        GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.developer-tools"
-        INFOPLIST_KEY_NSHighResolutionCapable: YES
         CODE_SIGN_ENTITLEMENTS: "ClaudeCron/ClaudeCron.entitlements"
     scheme:
       testTargets:
