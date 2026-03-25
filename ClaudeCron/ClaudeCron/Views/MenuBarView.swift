@@ -39,11 +39,11 @@ struct MenuBarView: View {
             if cliInstalled {
                 try CLIInstallService.uninstall()
                 cliInstalled = false
-                sendNotification(title: "CLI Uninstalled", body: "ccron has been removed from /usr/local/bin")
+                showAlert(title: "CLI Uninstalled", message: "ccron has been removed")
             } else {
                 try CLIInstallService.install()
                 cliInstalled = true
-                sendNotification(title: "CLI Installed", body: "ccron is now available in your terminal")
+                showAlert(title: "CLI Installed", message: "ccron is now available in your terminal.\nRestart your terminal if this is the first install.")
             }
         } catch {
             let command = cliInstalled
@@ -51,16 +51,21 @@ struct MenuBarView: View {
                 : CLIInstallService.manualInstallCommand
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(command, forType: .string)
-            sendNotification(title: "CLI Install Failed", body: "Run manually: \(command) (copied to clipboard)")
+            showAlert(
+                title: "Permission Required",
+                message: "Run this command in your terminal (copied to clipboard):\n\n\(command)",
+                style: .warning
+            )
         }
     }
 
-    private func sendNotification(title: String, body: String) {
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
-        content.sound = .default
-        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request)
+    private func showAlert(title: String, message: String, style: NSAlert.Style = .informational) {
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        alert.alertStyle = style
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 }
