@@ -37,6 +37,8 @@ final class ClaudeTask {
     var notifyOnStart: Bool
     var notifyOnEnd: Bool
     var createdAt: Date
+    var sourceFolder: String = ""   // folder that owns this task's settings.json
+    var taskId: String = ""         // string key in the tasks dict (e.g. "daily-cleanup")
 
     @Relationship(deleteRule: .cascade, inverse: \TaskRun.task)
     var runs: [TaskRun]
@@ -80,5 +82,51 @@ final class ClaudeTask {
         self.notifyOnEnd = notifyOnEnd
         self.createdAt = Date()
         self.runs = []
+    }
+
+    /// Unique identity across all settings files
+    var compositeKey: String {
+        "\(sourceFolder)::\(taskId)"
+    }
+
+    /// Convert to a TaskDefinition for JSON serialization
+    func toTaskDefinition(isGlobal: Bool) -> TaskDefinition {
+        let schedule = self.schedule
+        var def = TaskDefinition(name: name, prompt: prompt)
+        if isGlobal {
+            def.path = directory
+        }
+        def.model = model
+        def.permissionMode = permissionMode
+        def.schedule = ScheduleDefinition.from(schedule)
+        def.isEnabled = isEnabled
+        def.sessionMode = sessionMode
+        def.sessionId = sessionId
+        def.allowedTools = allowedTools.split(separator: ",")
+            .map { String($0).trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+        def.disallowedTools = disallowedTools.split(separator: ",")
+            .map { String($0).trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+        def.notifyOnStart = notifyOnStart
+        def.notifyOnEnd = notifyOnEnd
+        return def
+    }
+
+    /// Update this task's properties from a TaskDefinition
+    func update(from def: TaskDefinition, resolvedPath: String) {
+        name = def.name
+        prompt = def.prompt
+        directory = resolvedPath
+        model = def.model
+        permissionMode = def.permissionMode
+        schedule = def.schedule.toTaskSchedule()
+        isEnabled = def.isEnabled
+        sessionMode = def.sessionMode
+        sessionId = def.sessionId
+        allowedTools = def.allowedTools.joined(separator: ",")
+        disallowedTools = def.disallowedTools.joined(separator: ",")
+        notifyOnStart = def.notifyOnStart
+        notifyOnEnd = def.notifyOnEnd
     }
 }

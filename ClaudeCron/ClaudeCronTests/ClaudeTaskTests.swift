@@ -93,4 +93,78 @@ final class ClaudeTaskTests: XCTestCase {
         XCTAssertEqual(SessionMode.resume.rawValue, "Resume Session")
         XCTAssertEqual(SessionMode.fork.rawValue, "Fork Session")
     }
+
+    func testSourceFolderAndTaskId() {
+        let task = ClaudeTask()
+        task.sourceFolder = "/Users/me/project"
+        task.taskId = "my-task"
+        XCTAssertEqual(task.sourceFolder, "/Users/me/project")
+        XCTAssertEqual(task.taskId, "my-task")
+    }
+
+    func testCompositeKey() {
+        let task = ClaudeTask()
+        task.sourceFolder = "/Users/me/project"
+        task.taskId = "daily-cleanup"
+        XCTAssertEqual(task.compositeKey, "/Users/me/project::daily-cleanup")
+    }
+
+    func testToTaskDefinition() {
+        let task = ClaudeTask(
+            name: "Test",
+            prompt: "do it",
+            directory: "/tmp",
+            model: .opus,
+            permissionMode: .bypass,
+            isEnabled: false,
+            allowedTools: "Read,Write",
+            disallowedTools: "Bash",
+            notifyOnStart: true,
+            notifyOnEnd: false
+        )
+        task.taskId = "test-task"
+        task.sourceFolder = NSHomeDirectory()
+
+        let def = task.toTaskDefinition(isGlobal: true)
+        XCTAssertEqual(def.name, "Test")
+        XCTAssertEqual(def.prompt, "do it")
+        XCTAssertEqual(def.path, "/tmp")
+        XCTAssertEqual(def.model, "opus")
+        XCTAssertEqual(def.permissionMode, "bypassPermissions")
+        XCTAssertFalse(def.isEnabled)
+        XCTAssertEqual(def.allowedTools, ["Read", "Write"])
+        XCTAssertEqual(def.disallowedTools, ["Bash"])
+        XCTAssertTrue(def.notifyOnStart)
+        XCTAssertFalse(def.notifyOnEnd)
+    }
+
+    func testToTaskDefinitionProjectLocal() {
+        let task = ClaudeTask(
+            name: "Test",
+            prompt: "do it",
+            directory: "/Users/me/project"
+        )
+        task.taskId = "test-task"
+        task.sourceFolder = "/Users/me/project"
+
+        let def = task.toTaskDefinition(isGlobal: false)
+        XCTAssertNil(def.path)
+    }
+
+    func testUpdateFromDefinition() {
+        let task = ClaudeTask()
+        let def = TaskDefinition(
+            name: "Updated",
+            prompt: "new prompt",
+            path: "/new/path",
+            model: "opus",
+            permissionMode: "bypassPermissions"
+        )
+        task.update(from: def, resolvedPath: "/new/path")
+        XCTAssertEqual(task.name, "Updated")
+        XCTAssertEqual(task.prompt, "new prompt")
+        XCTAssertEqual(task.directory, "/new/path")
+        XCTAssertEqual(task.model, "opus")
+        XCTAssertEqual(task.permissionMode, "bypassPermissions")
+    }
 }
