@@ -747,8 +747,138 @@ enum CLIHandler {
             print(run.formattedOutput)
         }
     }
-    static func cmdFolders(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
-    static func cmdSync(container: ModelContainer) { printError("Not yet implemented"); exit(1) }
+    // MARK: - folders
+
+    static func cmdFolders(subargs: [String], container: ModelContainer) {
+        let registry = FolderRegistry()
+
+        guard let subcmd = subargs.first else {
+            // List folders
+            print("Registered folders:")
+            for folder in registry.allFolders {
+                let settingsPath = ConfigService.shared.settingsFilePath(for: folder)
+                let hasSettings = FileManager.default.fileExists(atPath: settingsPath)
+                let indicator = hasSettings ? "✓" : "○"
+                print("  \(indicator) \(displayFolder(folder))")
+            }
+            return
+        }
+
+        switch subcmd {
+        case "add":
+            guard subargs.count > 1 else {
+                printError("Usage: ccron folders add <path>")
+                exit(1)
+            }
+            let path = (subargs[1] as NSString).standardizingPath
+            let absPath = path.hasPrefix("/") ? path : (FileManager.default.currentDirectoryPath as NSString).appendingPathComponent(path)
+            guard FileManager.default.fileExists(atPath: absPath) else {
+                printError("Directory not found: \(absPath)")
+                exit(1)
+            }
+            registry.add(absPath)
+
+            // Import tasks from this folder
+            importFolder(absPath, container: container)
+            print("Added folder: \(displayFolder(absPath))")
+
+        case "remove":
+            guard subargs.count > 1 else {
+                printError("Usage: ccron folders remove <path>")
+                exit(1)
+            }
+            let path = (subargs[1] as NSString).standardizingPath
+            let absPath = path.hasPrefix("/") ? path : (FileManager.default.currentDirectoryPath as NSString).appendingPathComponent(path)
+
+            // Delete tasks from this folder
+            let context = ModelContext(container)
+            let descriptor = FetchDescriptor<ClaudeTask>(
+                predicate: #Predicate { $0.sourceFolder == absPath }
+            )
+            if let tasks = try? context.fetch(descriptor) {
+                for task in tasks {
+                    LaunchdService.shared.uninstall(task: task)
+                    context.delete(task)
+                }
+                try? context.save()
+            }
+
+            registry.remove(absPath)
+            print("Removed folder: \(displayFolder(absPath))")
+
+        default:
+            printError("Unknown folders subcommand: \(subcmd)")
+            printError("Usage: ccron folders [add|remove] [path]")
+            exit(1)
+        }
+    }
+
+    // MARK: - sync
+
+    static func cmdSync(container: ModelContainer) {
+        let registry = FolderRegistry()
+        let context = ModelContext(container)
+
+        for folder in registry.allFolders {
+            importFolder(folder, container: container)
+        }
+
+        // Remove tasks whose taskId no longer exists in their source settings file
+        let descriptor = FetchDescriptor<ClaudeTask>()
+        if let allTasks = try? context.fetch(descriptor) {
+            for task in allTasks {
+                guard !task.sourceFolder.isEmpty else { continue }
+                let settings = ConfigService.shared.read(folder: task.sourceFolder)
+                if settings.tasks[task.taskId] == nil {
+                    LaunchdService.shared.uninstall(task: task)
+                    context.delete(task)
+                }
+            }
+        }
+        try? context.save()
+
+        print("Sync complete.")
+    }
+
+    // MARK: - Import helper
+
+    private static func importFolder(_ folderPath: String, container: ModelContainer) {
+        let context = ModelContext(container)
+        let isGlobal = folderPath == NSHomeDirectory()
+        let registry = FolderRegistry()
+
+        registry.add(folderPath)
+        let settings = ConfigService.shared.read(folder: folderPath)
+
+        for (taskId, definition) in settings.tasks {
+            let resolvedPath = isGlobal ? (definition.path ?? folderPath) : folderPath
+
+            let descriptor = FetchDescriptor<ClaudeTask>(
+                predicate: #Predicate { $0.sourceFolder == folderPath && $0.taskId == taskId }
+            )
+            if let existing = try? context.fetch(descriptor).first {
+                existing.update(from: definition, resolvedPath: resolvedPath)
+            } else {
+                let task = ClaudeTask()
+                task.taskId = taskId
+                task.sourceFolder = folderPath
+                task.update(from: definition, resolvedPath: resolvedPath)
+                context.insert(task)
+            }
+        }
+
+        try? context.save()
+
+        // Install launchd jobs
+        let allDescriptor = FetchDescriptor<ClaudeTask>(
+            predicate: #Predicate { $0.sourceFolder == folderPath }
+        )
+        if let tasks = try? context.fetch(allDescriptor) {
+            for task in tasks {
+                LaunchdService.shared.install(task: task)
+            }
+        }
+    }
     // MARK: - --run-task (internal/launchd invocation)
 
     static func cmdRunTask(container: ModelContainer) {
