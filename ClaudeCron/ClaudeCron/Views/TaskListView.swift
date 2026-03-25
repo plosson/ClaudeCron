@@ -6,6 +6,7 @@ struct TaskListView: View {
     @Binding var selectedTask: ClaudeTask?
     @Binding var showingNewTask: Bool
     @Binding var showingSettings: Bool
+    var onAddFolder: () -> Void
 
     var body: some View {
         List(selection: $selectedTask) {
@@ -33,6 +34,11 @@ struct TaskListView: View {
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
                     Spacer()
+                    Button(action: onAddFolder) {
+                        Label("Add Folder", systemImage: "folder.badge.plus")
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)

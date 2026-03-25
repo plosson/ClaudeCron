@@ -4,6 +4,7 @@ import SwiftData
 @main
 struct ClaudeCronApp: App {
     @State private var cliMode = false
+    @State private var folderRegistry = FolderRegistry()
 
     static let sharedContainer: ModelContainer = {
         let schema = Schema([ClaudeTask.self, TaskRun.self])
@@ -48,6 +49,7 @@ struct ClaudeCronApp: App {
         WindowGroup {
             if !cliMode {
                 ContentView()
+                    .environment(folderRegistry)
             }
         }
         .modelContainer(Self.sharedContainer)
@@ -55,6 +57,7 @@ struct ClaudeCronApp: App {
         MenuBarExtra("Claude Cron", image: "MenuBarIcon") {
             MenuBarView()
                 .modelContainer(Self.sharedContainer)
+                .environment(folderRegistry)
         }
     }
 
