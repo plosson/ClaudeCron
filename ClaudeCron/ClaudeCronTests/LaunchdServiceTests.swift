@@ -4,32 +4,43 @@ import XCTest
 final class LaunchdServiceTests: XCTestCase {
 
     private let service = LaunchdService.shared
-    private let testLabel = "com.claudecron.task.test"
 
     func testPlistContainsLabel() {
         let task = ClaudeTask(name: "Test")
-        let plist = service.buildPlist(task: task, label: testLabel)
-        XCTAssertEqual(plist["Label"] as? String, testLabel)
+        task.sourceFolder = "/Users/me/project"
+        task.taskId = "test-task"
+        let plist = service.buildPlist(task: task)
+        let expectedLabel = service.plistLabel(for: task)
+        XCTAssertEqual(plist["Label"] as? String, expectedLabel)
     }
 
     func testPlistContainsProgramArguments() {
         let task = ClaudeTask(name: "Test")
-        let plist = service.buildPlist(task: task, label: testLabel)
+        task.sourceFolder = "/Users/me/project"
+        task.taskId = "test-task"
+        let plist = service.buildPlist(task: task)
         let args = plist["ProgramArguments"] as? [String]
         XCTAssertNotNil(args)
         XCTAssertTrue(args!.contains("--run-task"))
-        XCTAssertTrue(args!.contains(task.id.uuidString))
+        XCTAssertTrue(args!.contains("--source-folder"))
+        XCTAssertTrue(args!.contains(task.sourceFolder))
+        XCTAssertTrue(args!.contains("--task-id"))
+        XCTAssertTrue(args!.contains(task.taskId))
     }
 
     func testPlistRunAtLoadIsFalse() {
         let task = ClaudeTask(name: "Test")
-        let plist = service.buildPlist(task: task, label: testLabel)
+        task.sourceFolder = "/Users/me/project"
+        task.taskId = "test-task"
+        let plist = service.buildPlist(task: task)
         XCTAssertEqual(plist["RunAtLoad"] as? Bool, false)
     }
 
     func testPlistHasLogPaths() {
         let task = ClaudeTask(name: "Test")
-        let plist = service.buildPlist(task: task, label: testLabel)
+        task.sourceFolder = "/Users/me/project"
+        task.taskId = "test-task"
+        let plist = service.buildPlist(task: task)
         XCTAssertNotNil(plist["StandardOutPath"] as? String)
         XCTAssertNotNil(plist["StandardErrorPath"] as? String)
     }
@@ -39,7 +50,9 @@ final class LaunchdServiceTests: XCTestCase {
         schedule.type = .daily
         schedule.time = Calendar.current.date(from: DateComponents(hour: 14, minute: 30))!
         let task = ClaudeTask(name: "Daily", schedule: schedule)
-        let plist = service.buildPlist(task: task, label: testLabel)
+        task.sourceFolder = "/Users/me/project"
+        task.taskId = "daily-task"
+        let plist = service.buildPlist(task: task)
         let interval = plist["StartCalendarInterval"] as? [String: Int]
         XCTAssertNotNil(interval)
         XCTAssertEqual(interval?["Hour"], 14)
@@ -52,7 +65,9 @@ final class LaunchdServiceTests: XCTestCase {
         schedule.weekdays = [1, 4, 7] // Sun, Wed, Sat
         schedule.time = Calendar.current.date(from: DateComponents(hour: 9, minute: 0))!
         let task = ClaudeTask(name: "Weekly", schedule: schedule)
-        let plist = service.buildPlist(task: task, label: testLabel)
+        task.sourceFolder = "/Users/me/project"
+        task.taskId = "weekly-task"
+        let plist = service.buildPlist(task: task)
         let intervals = plist["StartCalendarInterval"] as? [[String: Int]]
         XCTAssertNotNil(intervals)
         XCTAssertEqual(intervals?.count, 3)
@@ -66,7 +81,9 @@ final class LaunchdServiceTests: XCTestCase {
         schedule.type = .interval
         schedule.intervalMinutes = 45
         let task = ClaudeTask(name: "Interval", schedule: schedule)
-        let plist = service.buildPlist(task: task, label: testLabel)
+        task.sourceFolder = "/Users/me/project"
+        task.taskId = "interval-task"
+        let plist = service.buildPlist(task: task)
         XCTAssertEqual(plist["StartInterval"] as? Int, 45 * 60)
         XCTAssertNil(plist["StartCalendarInterval"])
     }
@@ -76,7 +93,9 @@ final class LaunchdServiceTests: XCTestCase {
         schedule.type = .monthly
         schedule.time = Calendar.current.date(from: DateComponents(year: 2025, month: 1, day: 15, hour: 10, minute: 0))!
         let task = ClaudeTask(name: "Monthly", schedule: schedule)
-        let plist = service.buildPlist(task: task, label: testLabel)
+        task.sourceFolder = "/Users/me/project"
+        task.taskId = "monthly-task"
+        let plist = service.buildPlist(task: task)
         let interval = plist["StartCalendarInterval"] as? [String: Int]
         XCTAssertNotNil(interval)
         XCTAssertEqual(interval?["Day"], 15)
@@ -88,8 +107,51 @@ final class LaunchdServiceTests: XCTestCase {
         var schedule = TaskSchedule()
         schedule.type = .manual
         let task = ClaudeTask(name: "Manual", schedule: schedule)
-        let plist = service.buildPlist(task: task, label: testLabel)
+        task.sourceFolder = "/Users/me/project"
+        task.taskId = "manual-task"
+        let plist = service.buildPlist(task: task)
         XCTAssertNil(plist["StartCalendarInterval"])
         XCTAssertNil(plist["StartInterval"])
+    }
+
+    // MARK: - Composite key label tests
+
+    func testPlistLabelFromCompositeKey() {
+        let task = ClaudeTask(name: "Test", prompt: "hello", directory: "/tmp")
+        task.sourceFolder = "/Users/me/project"
+        task.taskId = "daily-cleanup"
+        let label = service.plistLabel(for: task)
+        XCTAssertTrue(label.hasPrefix("com.claudecron.task."))
+        // Same inputs produce same label
+        let label2 = service.plistLabel(for: task)
+        XCTAssertEqual(label, label2)
+    }
+
+    func testPlistLabelUniqueness() {
+        let task1 = ClaudeTask(name: "A", prompt: "x", directory: "/tmp")
+        task1.sourceFolder = "/Users/me/project1"
+        task1.taskId = "my-task"
+
+        let task2 = ClaudeTask(name: "B", prompt: "y", directory: "/tmp")
+        task2.sourceFolder = "/Users/me/project2"
+        task2.taskId = "my-task"
+
+        XCTAssertNotEqual(
+            service.plistLabel(for: task1),
+            service.plistLabel(for: task2)
+        )
+    }
+
+    func testBuildPlistUsesCompositeKeyArgs() {
+        let task = ClaudeTask(name: "Test", prompt: "hello", directory: "/tmp")
+        task.sourceFolder = "/Users/me/project"
+        task.taskId = "daily-cleanup"
+        let plist = service.buildPlist(task: task)
+        let args = plist["ProgramArguments"] as! [String]
+        XCTAssertTrue(args.contains("--run-task"))
+        XCTAssertTrue(args.contains("--source-folder"))
+        XCTAssertTrue(args.contains(task.sourceFolder))
+        XCTAssertTrue(args.contains("--task-id"))
+        XCTAssertTrue(args.contains(task.taskId))
     }
 }

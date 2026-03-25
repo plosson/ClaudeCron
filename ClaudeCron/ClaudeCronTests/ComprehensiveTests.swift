@@ -327,7 +327,9 @@ final class PlistWeekdayConversionTests: XCTestCase {
     func testSundayMapsToZeroInLaunchd() {
         let sched = TaskSchedule(type: .weekly, weekdays: [1]) // Sunday
         let task = ClaudeTask(name: "sunday", schedule: sched)
-        let plist = LaunchdService.shared.buildPlist(task: task, label: "test")
+        task.sourceFolder = "/tmp"
+        task.taskId = "sunday-test"
+        let plist = LaunchdService.shared.buildPlist(task: task)
         let intervals = plist["StartCalendarInterval"] as? [[String: Int]]
         XCTAssertEqual(intervals?.first?["Weekday"], 0,
             "Sunday (Calendar weekday 1) should map to launchd weekday 0")
@@ -337,7 +339,9 @@ final class PlistWeekdayConversionTests: XCTestCase {
     func testSaturdayMapsToSixInLaunchd() {
         let sched = TaskSchedule(type: .weekly, weekdays: [7]) // Saturday
         let task = ClaudeTask(name: "saturday", schedule: sched)
-        let plist = LaunchdService.shared.buildPlist(task: task, label: "test")
+        task.sourceFolder = "/tmp"
+        task.taskId = "saturday-test"
+        let plist = LaunchdService.shared.buildPlist(task: task)
         let intervals = plist["StartCalendarInterval"] as? [[String: Int]]
         XCTAssertEqual(intervals?.first?["Weekday"], 6,
             "Saturday (Calendar weekday 7) should map to launchd weekday 6")
@@ -347,7 +351,9 @@ final class PlistWeekdayConversionTests: XCTestCase {
     func testInvalidWeekdayZeroInSet() {
         let sched = TaskSchedule(type: .weekly, weekdays: [0]) // Invalid!
         let task = ClaudeTask(name: "invalid", schedule: sched)
-        let plist = LaunchdService.shared.buildPlist(task: task, label: "test")
+        task.sourceFolder = "/tmp"
+        task.taskId = "invalid-test"
+        let plist = LaunchdService.shared.buildPlist(task: task)
         let intervals = plist["StartCalendarInterval"] as? [[String: Int]]
         XCTAssertEqual(intervals?.count ?? 0, 0,
             "Invalid weekday 0 should be filtered out — no calendar intervals produced")
@@ -484,7 +490,9 @@ final class PlistCorrectnessTests: XCTestCase {
     func testDailyPlistStructure() {
         let midnight = Calendar.current.date(from: DateComponents(hour: 0, minute: 0))!
         let task = ClaudeTask(name: "test", schedule: TaskSchedule(type: .daily, time: midnight))
-        let plist = LaunchdService.shared.buildPlist(task: task, label: "test")
+        task.sourceFolder = "/tmp"
+        task.taskId = "daily-test"
+        let plist = LaunchdService.shared.buildPlist(task: task)
         let interval = plist["StartCalendarInterval"] as? [String: Int]
         XCTAssertEqual(interval?["Hour"], 0)
         XCTAssertEqual(interval?["Minute"], 0)
@@ -494,22 +502,31 @@ final class PlistCorrectnessTests: XCTestCase {
 
     func testIntervalPlistStructure() {
         let task = ClaudeTask(name: "test", schedule: TaskSchedule(type: .interval, intervalMinutes: 30))
-        let plist = LaunchdService.shared.buildPlist(task: task, label: "test")
+        task.sourceFolder = "/tmp"
+        task.taskId = "interval-test"
+        let plist = LaunchdService.shared.buildPlist(task: task)
         XCTAssertEqual(plist["StartInterval"] as? Int, 1800)
         XCTAssertNil(plist["StartCalendarInterval"])
     }
 
     func testManualPlistHasNoSchedule() {
         let task = ClaudeTask(name: "test", schedule: TaskSchedule(type: .manual))
-        let plist = LaunchdService.shared.buildPlist(task: task, label: "test")
+        task.sourceFolder = "/tmp"
+        task.taskId = "manual-test"
+        let plist = LaunchdService.shared.buildPlist(task: task)
         XCTAssertNil(plist["StartCalendarInterval"])
         XCTAssertNil(plist["StartInterval"])
     }
 
-    func testPlistContainsTaskId() {
+    func testPlistContainsTaskIdentity() {
         let task = ClaudeTask(name: "test")
-        let plist = LaunchdService.shared.buildPlist(task: task, label: "test")
+        task.sourceFolder = "/Users/me/project"
+        task.taskId = "my-task"
+        let plist = LaunchdService.shared.buildPlist(task: task)
         let args = plist["ProgramArguments"] as? [String]
-        XCTAssertTrue(args?.contains(task.id.uuidString) ?? false)
+        XCTAssertTrue(args?.contains("--source-folder") ?? false)
+        XCTAssertTrue(args?.contains(task.sourceFolder) ?? false)
+        XCTAssertTrue(args?.contains("--task-id") ?? false)
+        XCTAssertTrue(args?.contains(task.taskId) ?? false)
     }
 }
