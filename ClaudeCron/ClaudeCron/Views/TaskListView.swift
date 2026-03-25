@@ -15,26 +15,43 @@ struct TaskListView: View {
         return grouped.sorted { $0.key < $1.key }
     }
 
+    private var hasSingleFolder: Bool {
+        tasksByFolder.count <= 1
+    }
+
+    private func displayName(for folder: String) -> String {
+        if folder == NSHomeDirectory() { return "Global" }
+        let name = (folder as NSString).lastPathComponent
+        return name.isEmpty ? "Unsorted" : name
+    }
+
     var body: some View {
         List(selection: $selectedTask) {
             ForEach(tasksByFolder, id: \.0) { folder, folderTasks in
-                Section {
+                if hasSingleFolder {
                     ForEach(folderTasks) { task in
                         TaskRowView(task: task)
                             .tag(task)
                     }
-                } header: {
-                    HStack {
-                        let displayName = folder == NSHomeDirectory() ? "Global" : (folder as NSString).lastPathComponent
-                        Text(displayName)
-                        Spacer()
-                        if folder != NSHomeDirectory() {
-                            Button(action: { onRemoveFolder(folder) }) {
-                                Image(systemName: "xmark.circle")
-                                    .font(.caption)
+                } else {
+                    Section {
+                        ForEach(folderTasks) { task in
+                            TaskRowView(task: task)
+                                .tag(task)
+                        }
+                    } header: {
+                        HStack {
+                            Text(displayName(for: folder))
+                            Spacer()
+                            if folder != NSHomeDirectory() {
+                                Button(action: { onRemoveFolder(folder) }) {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 11))
+                                        .foregroundStyle(.tertiary)
+                                }
+                                .buttonStyle(.plain)
+                                .help("Remove folder")
                             }
-                            .buttonStyle(.plain)
-                            .foregroundStyle(.secondary)
                         }
                     }
                 }
@@ -52,23 +69,29 @@ struct TaskListView: View {
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 0) {
                 Divider()
-                HStack(spacing: 12) {
+                HStack(spacing: 8) {
                     Button(action: { showingSettings = true }) {
                         Label("Settings", systemImage: "gear")
+                            .labelStyle(.iconOnly)
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
+                    .help("Settings")
                     Button(action: onResync) {
                         Label("Resync", systemImage: "arrow.clockwise")
+                            .labelStyle(.iconOnly)
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
+                    .help("Resync folders")
                     Spacer()
                     Button(action: onAddFolder) {
                         Label("Add Folder", systemImage: "folder.badge.plus")
+                            .labelStyle(.iconOnly)
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
+                    .help("Add folder")
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
