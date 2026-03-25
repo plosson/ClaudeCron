@@ -510,9 +510,86 @@ enum CLIHandler {
 
         print("Updated task '\(editTask.name)' (\(editTask.taskId))")
     }
-    static func cmdDelete(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
-    static func cmdEnable(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
-    static func cmdDisable(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
+    // MARK: - delete
+
+    static func cmdDelete(subargs: [String], container: ModelContainer) {
+        guard let taskId = subargs.first else {
+            printError("Usage: ccron delete <task-id>")
+            exit(1)
+        }
+        guard let task = resolveTask(taskId, container: container) else {
+            printError("Task not found: \(taskId)")
+            exit(1)
+        }
+
+        let context = ModelContext(container)
+        let uuid = task.id
+        let descriptor = FetchDescriptor<ClaudeTask>(predicate: #Predicate { $0.id == uuid })
+        guard let delTask = try? context.fetch(descriptor).first else {
+            printError("Task not found in context")
+            exit(1)
+        }
+
+        // Remove from JSON
+        let folder = delTask.sourceFolder
+        var settings = ConfigService.shared.read(folder: folder)
+        settings.tasks.removeValue(forKey: delTask.taskId)
+        try? ConfigService.shared.write(settings, to: folder)
+
+        // Uninstall launchd
+        LaunchdService.shared.uninstall(task: delTask)
+
+        // Delete from SwiftData
+        let name = delTask.name
+        context.delete(delTask)
+        try? context.save()
+
+        print("Deleted task '\(name)'")
+    }
+
+    // MARK: - enable / disable
+
+    static func cmdEnable(subargs: [String], container: ModelContainer) {
+        setEnabled(true, subargs: subargs, container: container)
+    }
+
+    static func cmdDisable(subargs: [String], container: ModelContainer) {
+        setEnabled(false, subargs: subargs, container: container)
+    }
+
+    private static func setEnabled(_ enabled: Bool, subargs: [String], container: ModelContainer) {
+        guard let taskId = subargs.first else {
+            printError("Usage: ccron \(enabled ? "enable" : "disable") <task-id>")
+            exit(1)
+        }
+        guard let task = resolveTask(taskId, container: container) else {
+            printError("Task not found: \(taskId)")
+            exit(1)
+        }
+
+        let context = ModelContext(container)
+        let uuid = task.id
+        let descriptor = FetchDescriptor<ClaudeTask>(predicate: #Predicate { $0.id == uuid })
+        guard let t = try? context.fetch(descriptor).first else {
+            printError("Task not found in context")
+            exit(1)
+        }
+
+        t.isEnabled = enabled
+        try? context.save()
+
+        // Persist to JSON
+        let folder = t.sourceFolder
+        let isGlobal = folder == NSHomeDirectory()
+        var settings = ConfigService.shared.read(folder: folder)
+        settings.tasks[t.taskId] = t.toTaskDefinition(isGlobal: isGlobal)
+        try? ConfigService.shared.write(settings, to: folder)
+
+        // Update launchd
+        LaunchdService.shared.install(task: t)
+
+        print("\(enabled ? "Enabled" : "Disabled") task '\(t.name)'")
+    }
     static func cmdRun(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
     static func cmdHistory(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
     static func cmdLog(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
