@@ -14,13 +14,18 @@ struct ContentView: View {
                 .frame(minWidth: 220)
         } content: {
             if let task = selectedTask {
-                Text("Task: \(task.name)") // Placeholder — Task 5 will implement
+                TaskDetailView(task: task, selectedRun: $selectedRun)
                     .frame(minWidth: 300)
             } else {
                 ContentUnavailableView("Select a Task", systemImage: "clock.badge.questionmark")
             }
         } detail: {
-            ContentUnavailableView("Select a Run", systemImage: "terminal")
+            if let run = selectedRun {
+                RunDetailView(run: run)
+                    .frame(minWidth: 400)
+            } else {
+                ContentUnavailableView("Select a Run", systemImage: "terminal")
+            }
         }
         .frame(minWidth: 900, minHeight: 500)
         .onAppear {
