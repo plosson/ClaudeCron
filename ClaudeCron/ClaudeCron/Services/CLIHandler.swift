@@ -110,6 +110,16 @@ enum CLIHandler {
         FileHandle.standardError.write("Error: \(message)\n".data(using: .utf8)!)
     }
 
+    /// Save context with error reporting instead of silent failure
+    static func saveContext(_ context: ModelContext) {
+        do {
+            try context.save()
+        } catch {
+            printError("Failed to save: \(error.localizedDescription)")
+            exit(1)
+        }
+    }
+
     /// Resolve a task-id argument. Supports "task-id" or "folder::task-id".
     static func resolveTask(_ identifier: String, container: ModelContainer) -> ClaudeTask? {
         let context = ModelContext(container)
@@ -302,7 +312,15 @@ enum CLIHandler {
         let directory = flagValue("--directory", in: subargs) ?? (isGlobal ? FileManager.default.currentDirectoryPath : sourceFolder)
 
         let modelStr = flagValue("--model", in: subargs) ?? "sonnet"
+        guard let validModel = mapModel(modelStr) else {
+            printError("Unknown model: \(modelStr). Use: opus, sonnet, haiku")
+            exit(1)
+        }
         let permissionsStr = flagValue("--permissions", in: subargs) ?? "default"
+        guard let validPermissions = mapPermissionMode(permissionsStr) else {
+            printError("Unknown permissions: \(permissionsStr). Use: default, bypass, plan, acceptEdits")
+            exit(1)
+        }
         let sessionMode: SessionMode = flagValue("--session-mode", in: subargs).flatMap({ mapSessionMode($0) }) ?? .new
 
         // Build schedule
@@ -324,8 +342,8 @@ enum CLIHandler {
             name: name,
             prompt: prompt,
             directory: directory,
-            model: ClaudeModel(rawValue: modelStr) ?? .sonnet,
-            permissionMode: PermissionMode(rawValue: permissionsStr) ?? .default_,
+            model: ClaudeModel(rawValue: validModel) ?? .sonnet,
+            permissionMode: PermissionMode(rawValue: validPermissions) ?? .default_,
             schedule: schedule,
             isEnabled: true,
             sessionMode: sessionMode,
@@ -344,7 +362,7 @@ enum CLIHandler {
         }
 
         context.insert(task)
-        try? context.save()
+        saveContext(context)
 
         // Persist to JSON
         let folder = task.sourceFolder
@@ -367,6 +385,26 @@ enum CLIHandler {
         case "fork": return .fork
         default: return nil
         }
+    }
+
+    /// Map short permission mode names to raw values
+    static func mapPermissionMode(_ value: String) -> String? {
+        switch value.lowercased() {
+        case "default": return PermissionMode.default_.rawValue
+        case "bypass": return PermissionMode.bypass.rawValue
+        case "plan": return PermissionMode.plan.rawValue
+        case "acceptedits": return PermissionMode.acceptEdits.rawValue
+        default:
+            // Also accept raw values directly
+            if PermissionMode(rawValue: value) != nil { return value }
+            return nil
+        }
+    }
+
+    /// Map short model names to raw values
+    static func mapModel(_ value: String) -> String? {
+        if ClaudeModel(rawValue: value.lowercased()) != nil { return value.lowercased() }
+        return nil
     }
 
     /// Parse schedule options from args
@@ -461,10 +499,18 @@ enum CLIHandler {
             editTask.directory = dir; changed = true
         }
         if let model = flagValue("--model", in: subargs) {
-            editTask.model = model; changed = true
+            guard let valid = mapModel(model) else {
+                printError("Unknown model: \(model). Use: opus, sonnet, haiku")
+                exit(1)
+            }
+            editTask.model = valid; changed = true
         }
         if let perm = flagValue("--permissions", in: subargs) {
-            editTask.permissionMode = perm; changed = true
+            guard let valid = mapPermissionMode(perm) else {
+                printError("Unknown permissions: \(perm). Use: default, bypass, plan, acceptEdits")
+                exit(1)
+            }
+            editTask.permissionMode = valid; changed = true
         }
         if let sm = flagValue("--session-mode", in: subargs), let mapped = mapSessionMode(sm) {
             editTask.sessionMode = mapped.rawValue; changed = true
@@ -496,7 +542,7 @@ enum CLIHandler {
             exit(1)
         }
 
-        try? context.save()
+        saveContext(context)
 
         // Re-persist to JSON
         let folder = editTask.sourceFolder
@@ -542,7 +588,7 @@ enum CLIHandler {
         // Delete from SwiftData
         let name = delTask.name
         context.delete(delTask)
-        try? context.save()
+        saveContext(context)
 
         print("Deleted task '\(name)'")
     }
@@ -576,7 +622,7 @@ enum CLIHandler {
         }
 
         t.isEnabled = enabled
-        try? context.save()
+        saveContext(context)
 
         // Persist to JSON
         let folder = t.sourceFolder
@@ -699,13 +745,25 @@ enum CLIHandler {
         }
 
         let context = ModelContext(container)
+
+        // Try exact UUID match first (fast path)
+        if let uuid = UUID(uuidString: runIdStr) {
+            let exactDescriptor = FetchDescriptor<TaskRun>(
+                predicate: #Predicate { $0.id == uuid }
+            )
+            if let exactMatch = try? context.fetch(exactDescriptor).first {
+                printRunLog(exactMatch)
+                return
+            }
+        }
+
+        // Fall back to prefix matching
         let descriptor = FetchDescriptor<TaskRun>()
         guard let runs = try? context.fetch(descriptor) else {
             printError("Could not fetch runs")
             exit(1)
         }
 
-        // Match by prefix of UUID string
         let matches = runs.filter { $0.id.uuidString.lowercased().hasPrefix(runIdStr.lowercased()) }
 
         guard let run = matches.first, matches.count == 1 else {
@@ -720,9 +778,10 @@ enum CLIHandler {
             exit(1)
         }
 
-        let showRaw = hasFlag("--raw", in: subargs)
-        let showDebug = hasFlag("--debug", in: subargs)
+        printRunLog(run, showRaw: hasFlag("--raw", in: subargs), showDebug: hasFlag("--debug", in: subargs))
+    }
 
+    private static func printRunLog(_ run: TaskRun, showRaw: Bool = false, showDebug: Bool = false) {
         print("Run: \(run.id.uuidString)")
         print("Task: \(run.task?.name ?? "unknown")")
         print("Status: \(run.runStatus.rawValue)")
@@ -800,7 +859,7 @@ enum CLIHandler {
                     LaunchdService.shared.uninstall(task: task)
                     context.delete(task)
                 }
-                try? context.save()
+                saveContext(context)
             }
 
             registry.remove(absPath)
@@ -835,7 +894,7 @@ enum CLIHandler {
                 }
             }
         }
-        try? context.save()
+        saveContext(context)
 
         print("Sync complete.")
     }
@@ -867,7 +926,7 @@ enum CLIHandler {
             }
         }
 
-        try? context.save()
+        saveContext(context)
 
         // Install launchd jobs
         let allDescriptor = FetchDescriptor<ClaudeTask>(
