@@ -29,6 +29,12 @@
 		F4B3E4963B83F95D1F6F1DD0 /* LaunchdServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294469A88632E5C55A7FF457 /* LaunchdServiceTests.swift */; };
 		FE1731942F92D16E14F67103 /* TaskRunTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C986CB49FCDD04CBF3DD8CF /* TaskRunTests.swift */; };
 		BB2C3D4E5F6A7B8C9D0E1F2A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA1B2C3D4E5F6A7B8C9D0E1F /* Assets.xcassets */; };
+		C1D2E3F4A5B6C7D8E9F0A1B2 /* TaskDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E3F4A5B6C7D8E9F0A1B2C3 /* TaskDefinition.swift */; };
+		E3F4A5B6C7D8E9F0A1B2C3D4 /* TaskDefinitionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A5B6C7D8E9F0A1B2C3D4E5 /* TaskDefinitionTests.swift */; };
+		F3C4D5E6A7B8C9D0E1F2A3B4 /* FolderRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A2B3C4E5F6A7B8C9D0E1F2 /* FolderRegistry.swift */; };
+		A4D5E6F7B8C9D0E1F2A3B4C5 /* FolderRegistryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2B3C4D5F6A7B8C9D0E1F2A3 /* FolderRegistryTests.swift */; };
+		C0CF19A1E2B34D5F6A7B8C9D /* ConfigService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DF29B2F3C45E6A7B8C9D0E /* ConfigService.swift */; };
+		E2EF39C3A4D56F7A8B9C0D1E /* ConfigServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3FA49D4B5E67A8B9C0D1E2F /* ConfigServiceTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -66,6 +72,12 @@
 		EFEA3A6F5DE56E686D5375EA /* TaskFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskFormView.swift; sourceTree = "<group>"; };
 		FD019193EE833858E20AB800 /* ScheduleType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleType.swift; sourceTree = "<group>"; };
 		AA1B2C3D4E5F6A7B8C9D0E1F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D2E3F4A5B6C7D8E9F0A1B2C3 /* TaskDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskDefinition.swift; sourceTree = "<group>"; };
+		F4A5B6C7D8E9F0A1B2C3D4E5 /* TaskDefinitionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskDefinitionTests.swift; sourceTree = "<group>"; };
+		D1A2B3C4E5F6A7B8C9D0E1F2 /* FolderRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderRegistry.swift; sourceTree = "<group>"; };
+		E2B3C4D5F6A7B8C9D0E1F2A3 /* FolderRegistryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderRegistryTests.swift; sourceTree = "<group>"; };
+		D1DF29B2F3C45E6A7B8C9D0E /* ConfigService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigService.swift; sourceTree = "<group>"; };
+		F3FA49D4B5E67A8B9C0D1E2F /* ConfigServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigServiceTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -82,6 +94,8 @@
 			isa = PBXGroup;
 			children = (
 				B24809E1081572F781DA7D88 /* ClaudeService.swift */,
+				D1DF29B2F3C45E6A7B8C9D0E /* ConfigService.swift */,
+				D1A2B3C4E5F6A7B8C9D0E1F2 /* FolderRegistry.swift */,
 				0E4BF8B563B68870E0BA6773 /* LaunchdService.swift */,
 				C1A4BF17344041A70813A379 /* ScheduleCalculator.swift */,
 			);
@@ -114,6 +128,7 @@
 			children = (
 				0EBEC258AAAB91E80832FDB4 /* ClaudeTask.swift */,
 				FD019193EE833858E20AB800 /* ScheduleType.swift */,
+				D2E3F4A5B6C7D8E9F0A1B2C3 /* TaskDefinition.swift */,
 				9040C1517A4F0A44B9BC2254 /* TaskRun.swift */,
 			);
 			path = Models;
@@ -125,8 +140,11 @@
 				68BB63179E406FE40B33D92E /* ClaudeServiceTests.swift */,
 				EF980197A18DEF24F6DC3902 /* ClaudeTaskTests.swift */,
 				3B2C4D5E6F7A8B9C0D1E2F3A /* ComprehensiveTests.swift */,
+				F3FA49D4B5E67A8B9C0D1E2F /* ConfigServiceTests.swift */,
+				E2B3C4D5F6A7B8C9D0E1F2A3 /* FolderRegistryTests.swift */,
 				294469A88632E5C55A7FF457 /* LaunchdServiceTests.swift */,
 				0501F9EA91D0364250B8E49C /* ScheduleCalculatorTests.swift */,
+				F4A5B6C7D8E9F0A1B2C3D4E5 /* TaskDefinitionTests.swift */,
 				6C986CB49FCDD04CBF3DD8CF /* TaskRunTests.swift */,
 				C6E3230D837A152B50C9BA5D /* TaskScheduleTests.swift */,
 			);
@@ -226,12 +244,14 @@
 				7F64DCFB69A2106AFF1C46B7 /* ClaudeService.swift in Sources */,
 				A651C1D3A6FDA91416352ED6 /* ClaudeTask.swift in Sources */,
 				CE368DE79EBDBF0BD1719810 /* ContentView.swift in Sources */,
+				F3C4D5E6A7B8C9D0E1F2A3B4 /* FolderRegistry.swift in Sources */,
 				5D7F63B7F0CDB675AC00F5F7 /* LaunchdService.swift in Sources */,
 				A68995C3F048C7CF56F7EA5B /* MenuBarView.swift in Sources */,
 				3890B580928A7F949580D10A /* RunDetailView.swift in Sources */,
 				B8F3EBA576F1F5DC9E2C9AB0 /* ScheduleCalculator.swift in Sources */,
 				A7F930CE7E629F92BBD8828B /* ScheduleType.swift in Sources */,
 				9FF60926A3CB4E43F71B9239 /* SettingsView.swift in Sources */,
+				C1D2E3F4A5B6C7D8E9F0A1B2 /* TaskDefinition.swift in Sources */,
 				90F81C7E68B5DA5CA76A877A /* TaskDetailView.swift in Sources */,
 				48ACB68ECC44934648AA2418 /* TaskFormView.swift in Sources */,
 				D23FD700BC6293E526BE91A6 /* TaskListView.swift in Sources */,
@@ -246,8 +266,10 @@
 				306600A8F2CA9CA7CFD6C156 /* ClaudeServiceTests.swift in Sources */,
 				74742489C67015D8128AAC85 /* ClaudeTaskTests.swift in Sources */,
 				2A1B3C4D5E6F7A8B9C0D1E2F /* ComprehensiveTests.swift in Sources */,
+				A4D5E6F7B8C9D0E1F2A3B4C5 /* FolderRegistryTests.swift in Sources */,
 				F4B3E4963B83F95D1F6F1DD0 /* LaunchdServiceTests.swift in Sources */,
 				40420538147E209AE9FDB36A /* ScheduleCalculatorTests.swift in Sources */,
+				E3F4A5B6C7D8E9F0A1B2C3D4 /* TaskDefinitionTests.swift in Sources */,
 				FE1731942F92D16E14F67103 /* TaskRunTests.swift in Sources */,
 				B2570FE3B0D5181E07A3571B /* TaskScheduleTests.swift in Sources */,
 			);
