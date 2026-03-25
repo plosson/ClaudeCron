@@ -642,8 +642,111 @@ enum CLIHandler {
 
         exit(finalExitCode == 0 ? 0 : 1)
     }
-    static func cmdHistory(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
-    static func cmdLog(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
+    // MARK: - history
+
+    static func cmdHistory(subargs: [String], container: ModelContainer) {
+        let context = ModelContext(container)
+        var runDescriptor: FetchDescriptor<TaskRun>
+
+        if let taskId = subargs.first {
+            guard let task = resolveTask(taskId, container: container) else {
+                printError("Task not found: \(taskId)")
+                exit(1)
+            }
+            let uuid = task.id
+            runDescriptor = FetchDescriptor<TaskRun>(
+                predicate: #Predicate { $0.task?.id == uuid }
+            )
+            runDescriptor.sortBy = [SortDescriptor(\.startedAt, order: .reverse)]
+        } else {
+            runDescriptor = FetchDescriptor<TaskRun>()
+            runDescriptor.sortBy = [SortDescriptor(\.startedAt, order: .reverse)]
+        }
+        runDescriptor.fetchLimit = 20
+
+        guard let runs = try? context.fetch(runDescriptor), !runs.isEmpty else {
+            print("No runs found.")
+            return
+        }
+
+        let dateFmt = DateFormatter()
+        dateFmt.dateStyle = .short
+        dateFmt.timeStyle = .short
+
+        let header = String(format: "%-20s  %-25s  %-10s  %-10s  %-4s  %s",
+            "DATE", "TASK", "STATUS", "DURATION", "EXIT", "RUN ID")
+        print(header)
+        print(String(repeating: "-", count: 100))
+
+        for run in runs {
+            let date = dateFmt.string(from: run.startedAt)
+            let taskName = String((run.task?.name ?? "unknown").prefix(25))
+            let status = run.runStatus.rawValue
+            let duration = run.duration.map { formatDuration($0) } ?? "-"
+            let exitCode = run.exitCode.map { String($0) } ?? "-"
+            let runId = String(run.id.uuidString.prefix(8))
+            print(String(format: "%-20s  %-25s  %-10s  %-10s  %-4s  %s",
+                date, taskName, status, duration, exitCode, runId))
+        }
+    }
+
+    // MARK: - log
+
+    static func cmdLog(subargs: [String], container: ModelContainer) {
+        guard let runIdStr = subargs.first else {
+            printError("Usage: ccron log <run-id>")
+            exit(1)
+        }
+
+        let context = ModelContext(container)
+        let descriptor = FetchDescriptor<TaskRun>()
+        guard let runs = try? context.fetch(descriptor) else {
+            printError("Could not fetch runs")
+            exit(1)
+        }
+
+        // Match by prefix of UUID string
+        let matches = runs.filter { $0.id.uuidString.lowercased().hasPrefix(runIdStr.lowercased()) }
+
+        guard let run = matches.first, matches.count == 1 else {
+            if matches.isEmpty {
+                printError("Run not found: \(runIdStr)")
+            } else {
+                printError("Ambiguous run ID. Matches:")
+                for r in matches {
+                    printError("  \(r.id.uuidString)")
+                }
+            }
+            exit(1)
+        }
+
+        let showRaw = hasFlag("--raw", in: subargs)
+        let showDebug = hasFlag("--debug", in: subargs)
+
+        print("Run: \(run.id.uuidString)")
+        print("Task: \(run.task?.name ?? "unknown")")
+        print("Status: \(run.runStatus.rawValue)")
+        let dateFmt = DateFormatter()
+        dateFmt.dateStyle = .medium
+        dateFmt.timeStyle = .medium
+        print("Started: \(dateFmt.string(from: run.startedAt))")
+        if let end = run.endedAt { print("Ended: \(dateFmt.string(from: end))") }
+        if let duration = run.duration { print("Duration: \(formatDuration(duration))") }
+        if let exitCode = run.exitCode { print("Exit code: \(exitCode)") }
+        if let sid = run.sessionId { print("Session: \(sid)") }
+        print("")
+
+        if showDebug {
+            print("--- Debug Log ---")
+            print(run.debugLog)
+        } else if showRaw {
+            print("--- Raw Output ---")
+            print(run.rawOutput)
+        } else {
+            print("--- Output ---")
+            print(run.formattedOutput)
+        }
+    }
     static func cmdFolders(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
     static func cmdSync(container: ModelContainer) { printError("Not yet implemented"); exit(1) }
     // MARK: - --run-task (internal/launchd invocation)
