@@ -72,7 +72,7 @@ final class LaunchdService {
 
     // MARK: - Build plist dictionary
 
-    private func buildPlist(task: ClaudeTask, label: String) -> [String: Any] {
+    func buildPlist(task: ClaudeTask, label: String) -> [String: Any] {
         let appPath = Bundle.main.executablePath ?? "/usr/local/bin/ClaudeCron"
         let schedule = task.schedule
         let calendar = Calendar.current

@@ -108,7 +108,7 @@ final class ClaudeService {
         runningProcesses.removeValue(forKey: id)
     }
 
-    private func extractSessionId(from output: String) -> String? {
+    func extractSessionId(from output: String) -> String? {
         let pattern = /session_id["\s:]+([a-f0-9-]+)/
         if let match = output.firstMatch(of: pattern) {
             return String(match.1)
