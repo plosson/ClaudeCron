@@ -590,10 +590,108 @@ enum CLIHandler {
 
         print("\(enabled ? "Enabled" : "Disabled") task '\(t.name)'")
     }
-    static func cmdRun(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
+    // MARK: - run
+
+    static func cmdRun(subargs: [String], container: ModelContainer) {
+        guard let taskId = subargs.first else {
+            printError("Usage: ccron run <task-id>")
+            exit(1)
+        }
+        guard let task = resolveTask(taskId, container: container) else {
+            printError("Task not found: \(taskId)")
+            exit(1)
+        }
+
+        print("Running '\(task.name)'...")
+        print("")
+
+        let context = ModelContext(container)
+        // Re-fetch in this context
+        let uuid = task.id
+        let descriptor = FetchDescriptor<ClaudeTask>(predicate: #Predicate { $0.id == uuid })
+        guard let runTask = try? context.fetch(descriptor).first else {
+            printError("Task not found in context")
+            exit(1)
+        }
+
+        let semaphore = DispatchSemaphore(value: 0)
+        var finalExitCode: Int32 = 1
+
+        LaunchdService.shared.triggerNow(task: runTask, modelContext: context, onDone: { exitCode in
+            finalExitCode = exitCode
+            semaphore.signal()
+        })
+
+        semaphore.wait()
+
+        // Print the last run's formatted output
+        var runDescriptor = FetchDescriptor<TaskRun>(
+            predicate: #Predicate { $0.task?.id == uuid }
+        )
+        runDescriptor.sortBy = [SortDescriptor(\.startedAt, order: .reverse)]
+        if let lastRun = try? context.fetch(runDescriptor).first {
+            if !lastRun.formattedOutput.isEmpty {
+                print(lastRun.formattedOutput)
+            }
+            print("")
+            print("Status: \(lastRun.runStatus.rawValue) (exit code: \(lastRun.exitCode ?? -1))")
+            if let duration = lastRun.duration {
+                print("Duration: \(formatDuration(duration))")
+            }
+        }
+
+        exit(finalExitCode == 0 ? 0 : 1)
+    }
     static func cmdHistory(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
     static func cmdLog(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
     static func cmdFolders(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
     static func cmdSync(container: ModelContainer) { printError("Not yet implemented"); exit(1) }
-    static func cmdRunTask(container: ModelContainer) { printError("Not yet implemented"); exit(1) }
+    // MARK: - --run-task (internal/launchd invocation)
+
+    static func cmdRunTask(container: ModelContainer) {
+        let args = CommandLine.arguments
+        let context = ModelContext(container)
+
+        if let folderIdx = args.firstIndex(of: "--source-folder"),
+           folderIdx + 1 < args.count,
+           let idIdx = args.firstIndex(of: "--task-id"),
+           idIdx + 1 < args.count {
+            let folder = args[folderIdx + 1]
+            let taskId = args[idIdx + 1]
+            let descriptor = FetchDescriptor<ClaudeTask>(
+                predicate: #Predicate { $0.sourceFolder == folder && $0.taskId == taskId }
+            )
+            guard let task = try? context.fetch(descriptor).first else {
+                printError("Task not found: \(folder)::\(taskId)")
+                exit(1)
+            }
+            LaunchdService.shared.triggerNow(task: task, modelContext: context, onDone: { exitCode in
+                exit(exitCode == 0 ? 0 : 1)
+            })
+        } else if let idx = args.firstIndex(of: "--run-task"),
+                  idx + 1 < args.count,
+                  args[idx + 1] != "--source-folder" {
+            let taskIdString = args[idx + 1]
+            guard let uuid = UUID(uuidString: taskIdString) else {
+                printError("Invalid task ID: \(taskIdString)")
+                exit(1)
+            }
+            let descriptor = FetchDescriptor<ClaudeTask>(
+                predicate: #Predicate { $0.id == uuid }
+            )
+            guard let task = try? context.fetch(descriptor).first else {
+                printError("Task not found: \(taskIdString)")
+                exit(1)
+            }
+            LaunchdService.shared.triggerNow(task: task, modelContext: context, onDone: { exitCode in
+                exit(exitCode == 0 ? 0 : 1)
+            })
+        } else {
+            printError("Usage: --run-task --source-folder <folder> --task-id <id>")
+            exit(1)
+        }
+
+        // Keep the run loop alive for async callbacks
+        RunLoop.main.run()
+    }
 }
