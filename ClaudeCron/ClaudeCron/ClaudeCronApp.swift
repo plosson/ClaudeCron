@@ -5,6 +5,21 @@ import SwiftData
 struct ClaudeCronApp: App {
     @State private var cliMode = false
 
+    static let sharedContainer: ModelContainer = {
+        let schema = Schema([ClaudeTask.self, TaskRun.self])
+        let config = ModelConfiguration(schema: schema)
+        do {
+            return try ModelContainer(for: schema, configurations: [config])
+        } catch {
+            // Schema changed — delete old store and retry
+            let url = config.url
+            try? FileManager.default.removeItem(at: url)
+            try? FileManager.default.removeItem(at: URL(fileURLWithPath: url.path + "-shm"))
+            try? FileManager.default.removeItem(at: URL(fileURLWithPath: url.path + "-wal"))
+            return try! ModelContainer(for: schema, configurations: [config])
+        }
+    }()
+
     init() {
         let args = CommandLine.arguments
         if let idx = args.firstIndex(of: "--run-task"),
@@ -21,11 +36,11 @@ struct ClaudeCronApp: App {
                 ContentView()
             }
         }
-        .modelContainer(for: [ClaudeTask.self, TaskRun.self])
+        .modelContainer(Self.sharedContainer)
 
         MenuBarExtra("Claude Cron", systemImage: "clock.badge.checkmark") {
             MenuBarView()
-                .modelContainer(for: [ClaudeTask.self, TaskRun.self])
+                .modelContainer(Self.sharedContainer)
         }
     }
 
@@ -35,10 +50,7 @@ struct ClaudeCronApp: App {
             exit(1)
         }
 
-        guard let container = try? ModelContainer(for: ClaudeTask.self, TaskRun.self) else {
-            print("Failed to open data store")
-            exit(1)
-        }
+        let container = Self.sharedContainer
 
         let context = container.mainContext
         let descriptor = FetchDescriptor<ClaudeTask>(
@@ -50,8 +62,8 @@ struct ClaudeCronApp: App {
             exit(1)
         }
 
-        LaunchdService.shared.triggerNow(task: task, modelContext: context)
-        // The app will stay alive via the run loop until the Claude process completes
-        // and the onComplete callback fires. The process termination handler will handle exit.
+        LaunchdService.shared.triggerNow(task: task, modelContext: context, onDone: { exitCode in
+            exit(exitCode == 0 ? 0 : 1)
+        })
     }
 }

@@ -97,9 +97,11 @@ final class LaunchdService {
         case .weekly:
             let hour = calendar.component(.hour, from: schedule.time)
             let minute = calendar.component(.minute, from: schedule.time)
-            let intervals: [[String: Int]] = schedule.weekdays.sorted().map { weekday in
-                ["Weekday": weekday - 1, "Hour": hour, "Minute": minute]
-            }
+            let intervals: [[String: Int]] = schedule.weekdays.sorted()
+                .filter { (1...7).contains($0) }
+                .map { weekday in
+                    ["Weekday": weekday - 1, "Hour": hour, "Minute": minute]
+                }
             plist["StartCalendarInterval"] = intervals
 
         case .interval:
@@ -168,17 +170,22 @@ final class LaunchdService {
 
     // MARK: - Manual trigger (run immediately, bypassing schedule)
 
-    func triggerNow(task: ClaudeTask, modelContext: ModelContext) {
+    func triggerNow(task: ClaudeTask, modelContext: ModelContext, onDone: ((Int32) -> Void)? = nil) {
         let run = TaskRun(task: task)
         modelContext.insert(run)
         try? modelContext.save()
+
+        run.log("Task: \(task.name) (id: \(task.id.uuidString))")
+        run.log("Prompt: \(task.prompt)")
+        run.log("Model: \(task.model), Permissions: \(task.permissionMode)")
+        run.log("Session mode: \(task.sessionMode)")
 
         if task.notifyOnStart {
             sendNotification(title: "Task Started", body: task.name)
         }
 
-        let allowedTools = task.allowedTools.split(separator: ",").map(String.init)
-        let disallowedTools = task.disallowedTools.split(separator: ",").map(String.init)
+        let allowedTools = task.allowedTools.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }
+        let disallowedTools = task.disallowedTools.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }
 
         _ = ClaudeService.shared.runTask(
             prompt: task.prompt,
@@ -191,20 +198,50 @@ final class LaunchdService {
             disallowedTools: disallowedTools,
             onOutput: { output in
                 run.rawOutput += output
-                for line in output.components(separatedBy: "\n") {
-                    if let data = line.data(using: .utf8),
-                       let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                for line in output.components(separatedBy: "\n") where !line.isEmpty {
+                    guard let data = line.data(using: .utf8),
+                          let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }
+
+                    let type = json["type"] as? String
+
+                    // Extract session_id from init event
+                    if type == "system",
+                       let subtype = json["subtype"] as? String, subtype == "init",
+                       let sid = json["session_id"] as? String {
+                        run.sessionId = sid
+                        task.sessionId = sid
+                    }
+
+                    // Extract streaming text from assistant messages
+                    if type == "assistant",
+                       let message = json["message"] as? [String: Any],
+                       let content = message["content"] as? [[String: Any]] {
+                        for block in content {
+                            if let text = block["text"] as? String {
+                                run.formattedOutput += text
+                            }
+                        }
+                    }
+
+                    // Extract final result
+                    if type == "result",
                        let result = json["result"] as? String {
-                        run.formattedOutput += result + "\n"
+                        // Replace streaming text with final result
+                        run.formattedOutput = result
                     }
                 }
+                try? modelContext.save()
+            },
+            onLog: { message in
+                run.log(message)
                 try? modelContext.save()
             },
             onComplete: { exitCode, sessionId in
                 run.endedAt = Date()
                 run.exitCode = Int(exitCode)
                 run.runStatus = exitCode == 0 ? .succeeded : .failed
-                if let sid = sessionId {
+                // Fallback: use stderr session ID if not already captured from stream
+                if run.sessionId == nil, let sid = sessionId {
                     run.sessionId = sid
                     task.sessionId = sid
                 }
@@ -214,6 +251,8 @@ final class LaunchdService {
                     let status = exitCode == 0 ? "completed" : "failed"
                     self.sendNotification(title: "Task \(status.capitalized)", body: task.name)
                 }
+
+                onDone?(exitCode)
             }
         )
     }

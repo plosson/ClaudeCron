@@ -19,14 +19,17 @@ struct TaskFormView: View {
     @State private var showAdvanced = false
     @State private var useExistingCommand = false
 
+    var editingTask: ClaudeTask?
     var onSave: (ClaudeTask) -> Void
     var onCancel: () -> Void
+
+    private var isEditing: Bool { editingTask != nil }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
             HStack {
-                Text("New Task")
+                Text(isEditing ? "Edit Task" : "New Task")
                     .font(.headline)
                 Spacer()
                 Button("Cancel", action: onCancel)
@@ -155,6 +158,28 @@ struct TaskFormView: View {
                 .padding()
             }
         }
+        .onAppear { populateFromEditingTask() }
+    }
+
+    private func populateFromEditingTask() {
+        guard let task = editingTask else { return }
+        name = task.name
+        prompt = task.prompt
+        directory = task.directory
+        model = ClaudeModel(rawValue: task.model) ?? .sonnet
+        permissionMode = PermissionMode(rawValue: task.permissionMode) ?? .default_
+        useExistingCommand = task.prompt.hasPrefix("/")
+        let schedule = task.schedule
+        scheduleType = schedule.type
+        scheduleTime = schedule.time
+        selectedWeekdays = schedule.weekdays
+        intervalMinutes = schedule.intervalMinutes
+        sessionMode = SessionMode(rawValue: task.sessionMode) ?? .new
+        sessionId = task.sessionId ?? ""
+        allowedTools = task.allowedTools
+        disallowedTools = task.disallowedTools
+        notifyOnStart = task.notifyOnStart
+        notifyOnEnd = task.notifyOnEnd
     }
 
     private func save() {
@@ -164,23 +189,44 @@ struct TaskFormView: View {
             weekdays: selectedWeekdays,
             intervalMinutes: intervalMinutes
         )
-        let task = ClaudeTask(
-            name: name,
-            prompt: prompt,
-            directory: directory,
-            model: model,
-            permissionMode: permissionMode,
-            schedule: schedule,
-            sessionMode: sessionMode,
-            allowedTools: allowedTools,
-            disallowedTools: disallowedTools,
-            notifyOnStart: notifyOnStart,
-            notifyOnEnd: notifyOnEnd
-        )
-        if sessionMode != .new && !sessionId.isEmpty {
-            task.sessionId = sessionId
+
+        if let task = editingTask {
+            task.name = name
+            task.prompt = prompt
+            task.directory = directory
+            task.model = model.rawValue
+            task.permissionMode = permissionMode.rawValue
+            task.schedule = schedule
+            task.sessionMode = sessionMode.rawValue
+            task.allowedTools = allowedTools
+            task.disallowedTools = disallowedTools
+            task.notifyOnStart = notifyOnStart
+            task.notifyOnEnd = notifyOnEnd
+            if sessionMode != .new && !sessionId.isEmpty {
+                task.sessionId = sessionId
+            } else if sessionMode == .new {
+                task.sessionId = nil
+            }
+            onSave(task)
+        } else {
+            let task = ClaudeTask(
+                name: name,
+                prompt: prompt,
+                directory: directory,
+                model: model,
+                permissionMode: permissionMode,
+                schedule: schedule,
+                sessionMode: sessionMode,
+                allowedTools: allowedTools,
+                disallowedTools: disallowedTools,
+                notifyOnStart: notifyOnStart,
+                notifyOnEnd: notifyOnEnd
+            )
+            if sessionMode != .new && !sessionId.isEmpty {
+                task.sessionId = sessionId
+            }
+            onSave(task)
         }
-        onSave(task)
     }
 
     private func browseDirectory() {

@@ -17,6 +17,7 @@ final class TaskRun {
     var endedAt: Date?
     var rawOutput: String
     var formattedOutput: String
+    var debugLog: String
     var exitCode: Int?
     var sessionId: String?
 
@@ -37,5 +38,17 @@ final class TaskRun {
         self.startedAt = Date()
         self.rawOutput = ""
         self.formattedOutput = ""
+        self.debugLog = ""
     }
+
+    func log(_ message: String) {
+        let timestamp = Self.logDateFormatter.string(from: Date())
+        debugLog += "[\(timestamp)] \(message)\n"
+    }
+
+    private static let logDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm:ss.SSS"
+        return f
+    }()
 }

@@ -35,9 +35,12 @@ struct TaskSchedule: Codable, Equatable {
         case .interval:
             if intervalMinutes < 60 {
                 return "Every \(intervalMinutes) min"
+            } else if intervalMinutes % 60 == 0 {
+                return "Every \(intervalMinutes / 60) hr"
             } else {
                 let hours = intervalMinutes / 60
-                return "Every \(hours) hr"
+                let mins = intervalMinutes % 60
+                return "Every \(hours) hr \(mins) min"
             }
         }
     }

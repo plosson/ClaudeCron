@@ -37,9 +37,11 @@ struct ScheduleCalculator {
             case .monthly:
                 let h = calendar.component(.hour, from: schedule.time)
                 let m = calendar.component(.minute, from: schedule.time)
-                let d = calendar.component(.day, from: schedule.time)
+                let targetDay = calendar.component(.day, from: schedule.time)
                 var comps = calendar.dateComponents([.year, .month], from: candidate)
-                comps.day = d
+                // Clamp to last day of month if target day doesn't exist (e.g., day 31 in April)
+                let daysInMonth = calendar.range(of: .day, in: .month, for: candidate)?.count ?? 28
+                comps.day = min(targetDay, daysInMonth)
                 comps.hour = h
                 comps.minute = m
                 comps.second = 0

@@ -4,6 +4,7 @@ enum OutputTab: String, CaseIterable {
     case output = "Output"
     case rawOutput = "Raw Output"
     case errors = "Errors"
+    case debug = "Debug"
 }
 
 struct RunDetailView: View {
@@ -91,20 +92,29 @@ struct RunDetailView: View {
         case .output: return run.formattedOutput.isEmpty ? "No output yet" : run.formattedOutput
         case .rawOutput: return run.rawOutput.isEmpty ? "No raw output" : run.rawOutput
         case .errors: return "" // TODO: separate error stream
+        case .debug: return run.debugLog.isEmpty ? "No debug log" : run.debugLog
         }
+    }
+
+    /// Escape a string for use inside an AppleScript double-quoted string.
+    static func escapeForAppleScript(_ s: String) -> String {
+        s.replacingOccurrences(of: "\\", with: "\\\\")
+         .replacingOccurrences(of: "\"", with: "\\\"")
     }
 
     private func openInTerminal(app: String) {
         guard let dir = run.task?.directory else { return }
+        let safeDir = Self.escapeForAppleScript(dir)
+        let safeSid = Self.escapeForAppleScript(run.sessionId ?? "")
         let script: String
         if app == "iTerm" {
             script = """
             tell application "iTerm"
-                create window with default profile command "cd \(dir) && claude --resume \(run.sessionId ?? "")"
+                create window with default profile command "cd \(safeDir) && claude --resume \(safeSid)"
             end tell
             """
         } else {
-            script = "tell application \"Terminal\" to do script \"cd \(dir)\""
+            script = "tell application \"Terminal\" to do script \"cd \(safeDir)\""
         }
         if let appleScript = NSAppleScript(source: script) {
             var error: NSDictionary?

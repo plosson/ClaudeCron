@@ -4,6 +4,7 @@ import SwiftData
 struct TaskDetailView: View {
     @Bindable var task: ClaudeTask
     @Binding var selectedRun: TaskRun?
+    var onEdit: (ClaudeTask) -> Void = { _ in }
     @Environment(\.modelContext) private var modelContext
 
     var sortedRuns: [TaskRun] {
@@ -22,11 +23,17 @@ struct TaskDetailView: View {
                     Image(systemName: "play.circle")
                 }
                 .help("Run Now")
+                .disabled(task.runs.contains { $0.runStatus == .running })
 
-                Button(action: { /* TODO: edit */ }) {
+                Button(action: { onEdit(task) }) {
                     Image(systemName: "pencil.circle")
                 }
                 .help("Edit")
+
+                Button(action: toggleEnabled) {
+                    Image(systemName: task.isEnabled ? "pause.circle" : "play.circle.fill")
+                }
+                .help(task.isEnabled ? "Disable" : "Enable")
 
                 Spacer()
 
@@ -126,7 +133,14 @@ struct TaskDetailView: View {
         }
     }
 
+    private func toggleEnabled() {
+        task.isEnabled.toggle()
+        try? modelContext.save()
+        LaunchdService.shared.install(task: task)
+    }
+
     private func deleteTask() {
+        LaunchdService.shared.uninstall(taskId: task.id)
         modelContext.delete(task)
         try? modelContext.save()
     }
