@@ -48,6 +48,10 @@ struct ContentView: View {
                             editingTask = nil
                         } else {
                             // Creating new task — sourceFolder and taskId already set by form
+                            // Register folder if local scope
+                            if task.sourceFolder != NSHomeDirectory() {
+                                folderRegistry.add(task.sourceFolder)
+                            }
                             modelContext.insert(task)
                             try? modelContext.save()
                             LaunchdService.shared.install(task: task)

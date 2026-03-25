@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct TaskFormView: View {
-    @Environment(FolderRegistry.self) private var folderRegistry
     @State private var name = ""
     @State private var prompt = ""
     @State private var directory = ""
@@ -19,7 +18,7 @@ struct TaskFormView: View {
     @State private var notifyOnEnd = true
     @State private var showAdvanced = false
     @State private var useExistingCommand = false
-    @State private var selectedScope: String = ""
+    @State private var isLocalScope = false
     @State private var conflictWarning: String?
 
     var editingTask: ClaudeTask?
@@ -56,18 +55,23 @@ struct TaskFormView: View {
                     // Scope
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Scope").font(.subheadline.bold())
-                        Picker("", selection: $selectedScope) {
-                            Text("Global").tag("")
-                            ForEach(folderRegistry.folders, id: \.self) { folder in
-                                Text((folder as NSString).lastPathComponent).tag(folder)
-                            }
+                        Picker("", selection: $isLocalScope) {
+                            Text("Global").tag(false)
+                            Text("Local").tag(true)
                         }
-                        if selectedScope.isEmpty {
-                            Text("Task saved in ~/.ccron/settings.json")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                        .pickerStyle(.segmented)
+                        if isLocalScope {
+                            if directory.isEmpty {
+                                Text("Set a working directory to determine where settings are saved")
+                                    .font(.caption)
+                                    .foregroundStyle(.orange)
+                            } else {
+                                Text("Task saved in \(directory)/.ccron/settings.json")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                         } else {
-                            Text("Task saved in \((selectedScope as NSString).lastPathComponent)/.ccron/settings.json")
+                            Text("Task saved in ~/.ccron/settings.json")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -187,15 +191,13 @@ struct TaskFormView: View {
             }
         }
         .onAppear { populateFromEditingTask() }
-        .onChange(of: selectedScope) { oldValue, newValue in
-            if !newValue.isEmpty {
-                if directory.isEmpty || directory == oldValue {
-                    directory = newValue
-                }
-            }
+        .onChange(of: isLocalScope) { _, _ in
             validateConflict()
         }
         .onChange(of: name) { _, _ in
+            validateConflict()
+        }
+        .onChange(of: directory) { _, _ in
             validateConflict()
         }
     }
@@ -219,7 +221,7 @@ struct TaskFormView: View {
         disallowedTools = task.disallowedTools
         notifyOnStart = task.notifyOnStart
         notifyOnEnd = task.notifyOnEnd
-        selectedScope = task.sourceFolder == NSHomeDirectory() ? "" : task.sourceFolder
+        isLocalScope = task.sourceFolder != NSHomeDirectory() && !task.sourceFolder.isEmpty
     }
 
     private func save() {
@@ -247,7 +249,7 @@ struct TaskFormView: View {
             } else if sessionMode == .new {
                 task.sessionId = nil
             }
-            task.sourceFolder = selectedScope.isEmpty ? NSHomeDirectory() : selectedScope
+            task.sourceFolder = isLocalScope ? directory : NSHomeDirectory()
             onSave(task)
         } else {
             let task = ClaudeTask(
@@ -266,7 +268,7 @@ struct TaskFormView: View {
             if sessionMode != .new && !sessionId.isEmpty {
                 task.sessionId = sessionId
             }
-            task.sourceFolder = selectedScope.isEmpty ? NSHomeDirectory() : selectedScope
+            task.sourceFolder = isLocalScope ? directory : NSHomeDirectory()
             task.taskId = name.lowercased()
                 .replacingOccurrences(of: " ", with: "-")
                 .replacingOccurrences(of: "[^a-z0-9-]", with: "", options: .regularExpression)
@@ -276,7 +278,11 @@ struct TaskFormView: View {
     }
 
     private func validateConflict() {
-        let folder = selectedScope.isEmpty ? NSHomeDirectory() : selectedScope
+        let folder = isLocalScope ? directory : NSHomeDirectory()
+        guard !folder.isEmpty else {
+            conflictWarning = nil
+            return
+        }
         let candidateId = name.lowercased()
             .replacingOccurrences(of: " ", with: "-")
             .replacingOccurrences(of: "[^a-z0-9-]", with: "", options: .regularExpression)
@@ -294,7 +300,7 @@ struct TaskFormView: View {
 
         let settings = ConfigService.shared.read(folder: folder)
         if settings.tasks[candidateId] != nil {
-            let scopeName = selectedScope.isEmpty ? "Global" : (selectedScope as NSString).lastPathComponent
+            let scopeName = isLocalScope ? (directory as NSString).lastPathComponent : "Global"
             conflictWarning = "A task '\(candidateId)' already exists in \(scopeName)"
         } else {
             conflictWarning = nil

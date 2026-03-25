@@ -60,39 +60,35 @@ struct TaskListView: View {
         .listStyle(.sidebar)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button(action: { showingNewTask = true }) {
+                Menu {
+                    Button(action: { showingNewTask = true }) {
+                        Label("New Task", systemImage: "doc.badge.plus")
+                    }
+                    .keyboardShortcut("n", modifiers: .command)
+                    Button(action: onAddFolder) {
+                        Label("Add Folder", systemImage: "folder.badge.plus")
+                    }
+                } label: {
                     Image(systemName: "plus")
                 }
-                .keyboardShortcut("n", modifiers: .command)
             }
         }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 0) {
                 Divider()
-                HStack(spacing: 8) {
+                HStack(spacing: 12) {
                     Button(action: { showingSettings = true }) {
-                        Label("Settings", systemImage: "gear")
-                            .labelStyle(.iconOnly)
+                        Image(systemName: "gear")
                     }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
                     .help("Settings")
-                    Button(action: onResync) {
-                        Label("Resync", systemImage: "arrow.clockwise")
-                            .labelStyle(.iconOnly)
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
-                    .help("Resync folders")
                     Spacer()
-                    Button(action: onAddFolder) {
-                        Label("Add Folder", systemImage: "folder.badge.plus")
-                            .labelStyle(.iconOnly)
+                    Button(action: onResync) {
+                        Image(systemName: "arrow.clockwise")
                     }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
-                    .help("Add folder")
+                    .help("Resync folders")
                 }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
             }
