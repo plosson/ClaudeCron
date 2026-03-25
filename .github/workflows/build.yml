@@ -153,25 +153,23 @@ jobs:
           DMG_URL="https://github.com/plosson/ClaudeCron/releases/download/v${VERSION}/ClaudeCron-${VERSION}.dmg"
           DATE=$(date -R)
 
-          # Build the new item XML
-          ITEM=$(cat <<ITEMEOF
-            <item>
-                <title>Version ${VERSION}</title>
-                <pubDate>${DATE}</pubDate>
-                <sparkle:version>${VERSION}</sparkle:version>
-                <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
-                <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-                <enclosure
-                    url="${DMG_URL}"
-                    ${SPARKLE_SIGNATURE}
-                    length="${DMG_SIZE}"
-                    type="application/octet-stream" />
-            </item>
-          ITEMEOF
-          )
-
-          # Insert the new item before </channel>
-          sed -i '' "s|</channel>|${ITEM}\n    </channel>|" appcast.xml
+          python3 -c "
+          import sys
+          appcast = open('appcast.xml').read()
+          item = '''        <item>
+                  <title>Version ${VERSION}</title>
+                  <pubDate>${DATE}</pubDate>
+                  <sparkle:version>${VERSION}</sparkle:version>
+                  <sparkle:shortVersionString>${VERSION}</sparkle:shortVersionString>
+                  <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+                  <enclosure
+                      url=\"${DMG_URL}\"
+                      ${SPARKLE_SIGNATURE}
+                      type=\"application/octet-stream\" />
+              </item>'''
+          appcast = appcast.replace('</channel>', item + '\n    </channel>')
+          open('appcast.xml', 'w').write(appcast)
+          "
 
       - name: Commit appcast.xml
         run: |
