@@ -5,7 +5,6 @@ struct SettingsView: View {
     @AppStorage("defaultWorkingDirectory") private var defaultWorkingDirectory = "~/Projects"
     @AppStorage("defaultModel") private var defaultModel = "sonnet"
     @AppStorage("autoScrollLogs") private var autoScrollLogs = true
-    @AppStorage("defaultTerminal") private var defaultTerminal = "Terminal"
 
     var onClose: () -> Void
 
@@ -57,17 +56,6 @@ struct SettingsView: View {
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
-                            }
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Default Terminal/IDE").font(.subheadline.bold())
-                                Picker("", selection: $defaultTerminal) {
-                                    Text("Terminal").tag("Terminal")
-                                    Text("iTerm").tag("iTerm")
-                                }
-                                Text("Choose which application to use when opening Claude sessions")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
                             }
                         }
                     }
