@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CC1A2B3C4D5E6F7A8B9C0D1E /* CLIHandlerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2B3C4D5E6F7A8B9C0D1E2F /* CLIHandlerTests.swift */; };
 		1881FE7ED1A517CB16E79412 /* TaskDefinitionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FB81ABB0C5F83DE0D28F0DB /* TaskDefinitionTests.swift */; };
 		2366E165597EDFFD013D54F2 /* ConfigService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 059D2B262A583D8C517A3E99 /* ConfigService.swift */; };
 		2ED122D3DA7B62F38ABF9818 /* ConfigServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006BCADAB8856CB240F6A86F /* ConfigServiceTests.swift */; };
@@ -52,6 +53,7 @@
 
 /* Begin PBXFileReference section */
 		006BCADAB8856CB240F6A86F /* ConfigServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigServiceTests.swift; sourceTree = "<group>"; };
+		DD2B3C4D5E6F7A8B9C0D1E2F /* CLIHandlerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIHandlerTests.swift; sourceTree = "<group>"; };
 		042D203EB9CFE9B28CBC98CD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0501F9EA91D0364250B8E49C /* ScheduleCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleCalculatorTests.swift; sourceTree = "<group>"; };
 		059D2B262A583D8C517A3E99 /* ConfigService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigService.swift; sourceTree = "<group>"; };
@@ -147,6 +149,7 @@
 		8F82B4BEF9BE0CADCCC0CEB3 /* ClaudeCronTests */ = {
 			isa = PBXGroup;
 			children = (
+				DD2B3C4D5E6F7A8B9C0D1E2F /* CLIHandlerTests.swift */,
 				68BB63179E406FE40B33D92E /* ClaudeServiceTests.swift */,
 				EF980197A18DEF24F6DC3902 /* ClaudeTaskTests.swift */,
 				15DDC94366DAE6BDE2BC50C1 /* ComprehensiveTests.swift */,
@@ -288,6 +291,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CC1A2B3C4D5E6F7A8B9C0D1E /* CLIHandlerTests.swift in Sources */,
 				306600A8F2CA9CA7CFD6C156 /* ClaudeServiceTests.swift in Sources */,
 				74742489C67015D8128AAC85 /* ClaudeTaskTests.swift in Sources */,
 				EF1B7C95874B29406FBFC61F /* ComprehensiveTests.swift in Sources */,
