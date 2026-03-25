@@ -8,6 +8,8 @@ struct ContentView: View {
     @State private var showingNewTask = false
     @State private var showingSettings = false
     @State private var editingTask: ClaudeTask?
+    @State private var editingOriginalFolder: String = ""
+    @State private var editingOriginalTaskId: String = ""
     @Environment(\.modelContext) private var modelContext
     @Environment(FolderRegistry.self) private var folderRegistry
 
@@ -30,23 +32,22 @@ struct ContentView: View {
                     editingTask: editingTask,
                     onSave: { task in
                         if editingTask != nil {
-                            // Editing existing task — just save and reinstall
+                            // Editing existing task — save and reinstall
                             try? modelContext.save()
                             LaunchdService.shared.install(task: task)
+
+                            // If scope or taskId changed, remove from old location
+                            if (editingOriginalFolder != task.sourceFolder || editingOriginalTaskId != task.taskId)
+                               && !editingOriginalFolder.isEmpty {
+                                var oldSettings = ConfigService.shared.read(folder: editingOriginalFolder)
+                                oldSettings.tasks.removeValue(forKey: editingOriginalTaskId)
+                                try? ConfigService.shared.write(oldSettings, to: editingOriginalFolder)
+                            }
+
                             persistToJSON(task: task)
                             editingTask = nil
                         } else {
-                            // Creating new task
-                            // Set source info for new tasks
-                            if task.taskId.isEmpty {
-                                task.taskId = task.name.lowercased()
-                                    .replacingOccurrences(of: " ", with: "-")
-                                    .replacingOccurrences(of: "[^a-z0-9-]", with: "", options: .regularExpression)
-                                if task.taskId.isEmpty { task.taskId = UUID().uuidString }
-                            }
-                            if task.sourceFolder.isEmpty {
-                                task.sourceFolder = NSHomeDirectory()
-                            }
+                            // Creating new task — sourceFolder and taskId already set by form
                             modelContext.insert(task)
                             try? modelContext.save()
                             LaunchdService.shared.install(task: task)
@@ -63,6 +64,8 @@ struct ContentView: View {
                 .frame(minWidth: 350)
             } else if let task = selectedTask {
                 TaskDetailView(task: task, selectedRun: $selectedRun, onEdit: { task in
+                    editingOriginalFolder = task.sourceFolder
+                    editingOriginalTaskId = task.taskId
                     editingTask = task
                 }, onDelete: { task in
                     removeFromJSON(task: task)
