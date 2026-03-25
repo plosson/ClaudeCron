@@ -203,8 +203,7 @@ enum CLIHandler {
         }
 
         // Table header
-        let fmt = "%-8s  %-25s  %-8s  %-25s  %s"
-        print(String(format: fmt, "STATUS", "NAME", "MODEL", "SCHEDULE", "FOLDER"))
+        print(String(format: "%-8s  %-25s  %-8s  %-25s  %s", "STATUS", "NAME", "MODEL", "SCHEDULE", "FOLDER"))
         print(String(repeating: "-", count: 90))
 
         for task in tasks {
@@ -213,8 +212,7 @@ enum CLIHandler {
             let model = task.model
             let schedule = String(task.schedule.displaySummary.prefix(25))
             let folder = displayFolder(task.sourceFolder)
-            print(String(format: "%-8s  %-25s  %-8s  %-25s  %s",
-                status, name, model, schedule, folder))
+            print("\(status.padding(toLength: 8, withPad: " ", startingAt: 0))  \(name.padding(toLength: 25, withPad: " ", startingAt: 0))  \(model.padding(toLength: 8, withPad: " ", startingAt: 0))  \(schedule.padding(toLength: 25, withPad: " ", startingAt: 0))  \(folder)")
         }
 
         print("\n\(tasks.count) task(s)")
