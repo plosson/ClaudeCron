@@ -181,8 +181,37 @@ enum CLIHandler {
         return "\(hours)h \(mins)m"
     }
 
+    // MARK: - list
+
+    static func cmdList(container: ModelContainer) {
+        let context = ModelContext(container)
+        var descriptor = FetchDescriptor<ClaudeTask>()
+        descriptor.sortBy = [SortDescriptor(\.sourceFolder), SortDescriptor(\.name)]
+        guard let tasks = try? context.fetch(descriptor), !tasks.isEmpty else {
+            print("No tasks found.")
+            return
+        }
+
+        // Table header
+        let fmt = "%-8s  %-25s  %-8s  %-25s  %s"
+        print(String(format: fmt, "STATUS", "NAME", "MODEL", "SCHEDULE", "FOLDER"))
+        print(String(repeating: "-", count: 90))
+
+        for task in tasks {
+            let status = task.isEnabled ? "●" : "○"
+            let name = String(task.name.prefix(25))
+            let model = task.model
+            let schedule = String(task.schedule.displaySummary.prefix(25))
+            let folder = displayFolder(task.sourceFolder)
+            print(String(format: "%-8s  %-25s  %-8s  %-25s  %s",
+                status, name, model, schedule, folder))
+        }
+
+        print("\n\(tasks.count) task(s)")
+    }
+
     // MARK: - Command stubs (implemented in subsequent tasks)
-    static func cmdList(container: ModelContainer) { printError("Not yet implemented"); exit(1) }
+
     static func cmdShow(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
     static func cmdCreate(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
     static func cmdEdit(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
