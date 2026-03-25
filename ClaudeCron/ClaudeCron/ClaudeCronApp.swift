@@ -38,7 +38,7 @@ struct ClaudeCronApp: App {
         }
         .modelContainer(Self.sharedContainer)
 
-        MenuBarExtra("Claude Cron", systemImage: "clock.badge.checkmark") {
+        MenuBarExtra("Claude Cron", image: "MenuBarIcon") {
             MenuBarView()
                 .modelContainer(Self.sharedContainer)
         }
