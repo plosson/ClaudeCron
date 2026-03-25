@@ -25,7 +25,7 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.developer-tools"
         INFOPLIST_KEY_NSHighResolutionCapable: YES
-        CODE_SIGN_ENTITLEMENTS: ""
+        CODE_SIGN_ENTITLEMENTS: "ClaudeCron/ClaudeCron.entitlements"
     scheme:
       testTargets:
         - ClaudeCronTests

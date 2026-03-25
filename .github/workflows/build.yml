@@ -56,7 +56,7 @@ jobs:
         run: |
           codesign --force --options runtime \
             --sign "Developer ID Application: SPRL Losson (427N276E3Q)" \
-            --entitlements App/entitlements.plist \
+            --entitlements ClaudeCron/ClaudeCron/ClaudeCron.entitlements \
             --timestamp \
             "build/release/Claude Cron.app"
 
