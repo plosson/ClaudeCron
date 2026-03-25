@@ -22,6 +22,11 @@ struct ClaudeCronApp: App {
             }
         }
         .modelContainer(for: [ClaudeTask.self, TaskRun.self])
+
+        MenuBarExtra("Claude Cron", systemImage: "clock.badge.checkmark") {
+            MenuBarView()
+                .modelContainer(for: [ClaudeTask.self, TaskRun.self])
+        }
     }
 
     private func runTaskHeadless(taskId: String) {
