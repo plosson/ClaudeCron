@@ -5,6 +5,7 @@ struct TaskDetailView: View {
     @Bindable var task: ClaudeTask
     @Binding var selectedRun: TaskRun?
     var onEdit: (ClaudeTask) -> Void = { _ in }
+    var onDelete: (ClaudeTask) -> Void = { _ in }
     @Environment(\.modelContext) private var modelContext
 
     var sortedRuns: [TaskRun] {
@@ -137,12 +138,24 @@ struct TaskDetailView: View {
         task.isEnabled.toggle()
         try? modelContext.save()
         LaunchdService.shared.install(task: task)
+        persistToJSON()
     }
 
     private func deleteTask() {
-        LaunchdService.shared.uninstall(taskId: task.id)
-        modelContext.delete(task)
+        let taskToDelete = task
+        LaunchdService.shared.uninstall(task: taskToDelete)
+        onDelete(taskToDelete)
+        modelContext.delete(taskToDelete)
         try? modelContext.save()
+    }
+
+    private func persistToJSON() {
+        let folder = task.sourceFolder
+        guard !folder.isEmpty else { return }
+        let isGlobal = folder == NSHomeDirectory()
+        var settings = ConfigService.shared.read(folder: folder)
+        settings.tasks[task.taskId] = task.toTaskDefinition(isGlobal: isGlobal)
+        try? ConfigService.shared.write(settings, to: folder)
     }
 }
 

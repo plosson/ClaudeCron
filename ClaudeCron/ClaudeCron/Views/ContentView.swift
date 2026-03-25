@@ -31,12 +31,24 @@ struct ContentView: View {
                             // Editing existing task — just save and reinstall
                             try? modelContext.save()
                             LaunchdService.shared.install(task: task)
+                            persistToJSON(task: task)
                             editingTask = nil
                         } else {
                             // Creating new task
+                            // Set source info for new tasks
+                            if task.taskId.isEmpty {
+                                task.taskId = task.name.lowercased()
+                                    .replacingOccurrences(of: " ", with: "-")
+                                    .replacingOccurrences(of: "[^a-z0-9-]", with: "", options: .regularExpression)
+                                if task.taskId.isEmpty { task.taskId = UUID().uuidString }
+                            }
+                            if task.sourceFolder.isEmpty {
+                                task.sourceFolder = NSHomeDirectory()
+                            }
                             modelContext.insert(task)
                             try? modelContext.save()
                             LaunchdService.shared.install(task: task)
+                            persistToJSON(task: task)
                             selectedTask = task
                             showingNewTask = false
                         }
@@ -50,6 +62,9 @@ struct ContentView: View {
             } else if let task = selectedTask {
                 TaskDetailView(task: task, selectedRun: $selectedRun, onEdit: { task in
                     editingTask = task
+                }, onDelete: { task in
+                    removeFromJSON(task: task)
+                    selectedTask = nil
                 })
                     .frame(minWidth: 300)
             } else {
@@ -83,6 +98,23 @@ struct ContentView: View {
         if panel.runModal() == .OK, let url = panel.url {
             importFolder(url.path)
         }
+    }
+
+    private func persistToJSON(task: ClaudeTask) {
+        let folder = task.sourceFolder
+        guard !folder.isEmpty else { return }
+        let isGlobal = folder == NSHomeDirectory()
+        var settings = ConfigService.shared.read(folder: folder)
+        settings.tasks[task.taskId] = task.toTaskDefinition(isGlobal: isGlobal)
+        try? ConfigService.shared.write(settings, to: folder)
+    }
+
+    private func removeFromJSON(task: ClaudeTask) {
+        let folder = task.sourceFolder
+        guard !folder.isEmpty else { return }
+        var settings = ConfigService.shared.read(folder: folder)
+        settings.tasks.removeValue(forKey: task.taskId)
+        try? ConfigService.shared.write(settings, to: folder)
     }
 
     private func importFolder(_ folderPath: String) {
