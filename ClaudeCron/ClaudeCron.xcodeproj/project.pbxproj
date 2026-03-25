@@ -1,0 +1,518 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2A1B3C4D5E6F7A8B9C0D1E2F /* ComprehensiveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B2C4D5E6F7A8B9C0D1E2F3A /* ComprehensiveTests.swift */; };
+		306600A8F2CA9CA7CFD6C156 /* ClaudeServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68BB63179E406FE40B33D92E /* ClaudeServiceTests.swift */; };
+		3890B580928A7F949580D10A /* RunDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FAF49D140603D7962776ED5 /* RunDetailView.swift */; };
+		40420538147E209AE9FDB36A /* ScheduleCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0501F9EA91D0364250B8E49C /* ScheduleCalculatorTests.swift */; };
+		443191CD65C097182C6758E8 /* ClaudeCronApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14E1E45A615C704616A62CAF /* ClaudeCronApp.swift */; };
+		48ACB68ECC44934648AA2418 /* TaskFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFEA3A6F5DE56E686D5375EA /* TaskFormView.swift */; };
+		5D7F63B7F0CDB675AC00F5F7 /* LaunchdService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4BF8B563B68870E0BA6773 /* LaunchdService.swift */; };
+		74742489C67015D8128AAC85 /* ClaudeTaskTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF980197A18DEF24F6DC3902 /* ClaudeTaskTests.swift */; };
+		7F64DCFB69A2106AFF1C46B7 /* ClaudeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24809E1081572F781DA7D88 /* ClaudeService.swift */; };
+		90F81C7E68B5DA5CA76A877A /* TaskDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5E5623816DC0A8631EB25EB /* TaskDetailView.swift */; };
+		9FF60926A3CB4E43F71B9239 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0F026B115548C508DC47C3C /* SettingsView.swift */; };
+		A651C1D3A6FDA91416352ED6 /* ClaudeTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBEC258AAAB91E80832FDB4 /* ClaudeTask.swift */; };
+		A68995C3F048C7CF56F7EA5B /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97E80FA8667D44CE87C473FC /* MenuBarView.swift */; };
+		A7F930CE7E629F92BBD8828B /* ScheduleType.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD019193EE833858E20AB800 /* ScheduleType.swift */; };
+		B2570FE3B0D5181E07A3571B /* TaskScheduleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6E3230D837A152B50C9BA5D /* TaskScheduleTests.swift */; };
+		B8F3EBA576F1F5DC9E2C9AB0 /* ScheduleCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1A4BF17344041A70813A379 /* ScheduleCalculator.swift */; };
+		BAC9735A6F7A44A22A172BDE /* TaskRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9040C1517A4F0A44B9BC2254 /* TaskRun.swift */; };
+		CE368DE79EBDBF0BD1719810 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802D8AF02ADF5F375EA33F5D /* ContentView.swift */; };
+		D23FD700BC6293E526BE91A6 /* TaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98F65076F11292D4A1545472 /* TaskListView.swift */; };
+		F4B3E4963B83F95D1F6F1DD0 /* LaunchdServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294469A88632E5C55A7FF457 /* LaunchdServiceTests.swift */; };
+		FE1731942F92D16E14F67103 /* TaskRunTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C986CB49FCDD04CBF3DD8CF /* TaskRunTests.swift */; };
+		BB2C3D4E5F6A7B8C9D0E1F2A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA1B2C3D4E5F6A7B8C9D0E1F /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		7662EEB962BF534037D4FFCE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 78DBDF6FF06CC4F09AC26610 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B6DA0F0CD88C2F9B06ACA1F7;
+			remoteInfo = ClaudeCron;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0501F9EA91D0364250B8E49C /* ScheduleCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleCalculatorTests.swift; sourceTree = "<group>"; };
+		3B2C4D5E6F7A8B9C0D1E2F3A /* ComprehensiveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComprehensiveTests.swift; sourceTree = "<group>"; };
+		0E4BF8B563B68870E0BA6773 /* LaunchdService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchdService.swift; sourceTree = "<group>"; };
+		0EBEC258AAAB91E80832FDB4 /* ClaudeTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeTask.swift; sourceTree = "<group>"; };
+		14E1E45A615C704616A62CAF /* ClaudeCronApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeCronApp.swift; sourceTree = "<group>"; };
+		294469A88632E5C55A7FF457 /* LaunchdServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchdServiceTests.swift; sourceTree = "<group>"; };
+		4FAF49D140603D7962776ED5 /* RunDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunDetailView.swift; sourceTree = "<group>"; };
+		68BB63179E406FE40B33D92E /* ClaudeServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeServiceTests.swift; sourceTree = "<group>"; };
+		6C986CB49FCDD04CBF3DD8CF /* TaskRunTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRunTests.swift; sourceTree = "<group>"; };
+		763D465DC7B584A173260BF5 /* ClaudeCron.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClaudeCron.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		802D8AF02ADF5F375EA33F5D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		878D3387E71A23C164B000BA /* ClaudeCronTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClaudeCronTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9040C1517A4F0A44B9BC2254 /* TaskRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRun.swift; sourceTree = "<group>"; };
+		97E80FA8667D44CE87C473FC /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		98F65076F11292D4A1545472 /* TaskListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListView.swift; sourceTree = "<group>"; };
+		A5E5623816DC0A8631EB25EB /* TaskDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskDetailView.swift; sourceTree = "<group>"; };
+		B24809E1081572F781DA7D88 /* ClaudeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeService.swift; sourceTree = "<group>"; };
+		C1A4BF17344041A70813A379 /* ScheduleCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleCalculator.swift; sourceTree = "<group>"; };
+		C6E3230D837A152B50C9BA5D /* TaskScheduleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskScheduleTests.swift; sourceTree = "<group>"; };
+		D0F026B115548C508DC47C3C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		EF980197A18DEF24F6DC3902 /* ClaudeTaskTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeTaskTests.swift; sourceTree = "<group>"; };
+		EFEA3A6F5DE56E686D5375EA /* TaskFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskFormView.swift; sourceTree = "<group>"; };
+		FD019193EE833858E20AB800 /* ScheduleType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleType.swift; sourceTree = "<group>"; };
+		AA1B2C3D4E5F6A7B8C9D0E1F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		077AF8FE9FF893311352E089 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				763D465DC7B584A173260BF5 /* ClaudeCron.app */,
+				878D3387E71A23C164B000BA /* ClaudeCronTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3FC1B32035D1A14D38F2130D /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				B24809E1081572F781DA7D88 /* ClaudeService.swift */,
+				0E4BF8B563B68870E0BA6773 /* LaunchdService.swift */,
+				C1A4BF17344041A70813A379 /* ScheduleCalculator.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		44FA5B7EA7CA0495554C94FC = {
+			isa = PBXGroup;
+			children = (
+				7E73E7413A9EDA6DA1DD05BB /* ClaudeCron */,
+				8F82B4BEF9BE0CADCCC0CEB3 /* ClaudeCronTests */,
+				077AF8FE9FF893311352E089 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		7E73E7413A9EDA6DA1DD05BB /* ClaudeCron */ = {
+			isa = PBXGroup;
+			children = (
+				AA1B2C3D4E5F6A7B8C9D0E1F /* Assets.xcassets */,
+				14E1E45A615C704616A62CAF /* ClaudeCronApp.swift */,
+				887FCA31AB852EC9118A921F /* Models */,
+				3FC1B32035D1A14D38F2130D /* Services */,
+				FB8BBBFF264B1545DD71A1BF /* Views */,
+			);
+			path = ClaudeCron;
+			sourceTree = "<group>";
+		};
+		887FCA31AB852EC9118A921F /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				0EBEC258AAAB91E80832FDB4 /* ClaudeTask.swift */,
+				FD019193EE833858E20AB800 /* ScheduleType.swift */,
+				9040C1517A4F0A44B9BC2254 /* TaskRun.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		8F82B4BEF9BE0CADCCC0CEB3 /* ClaudeCronTests */ = {
+			isa = PBXGroup;
+			children = (
+				68BB63179E406FE40B33D92E /* ClaudeServiceTests.swift */,
+				EF980197A18DEF24F6DC3902 /* ClaudeTaskTests.swift */,
+				3B2C4D5E6F7A8B9C0D1E2F3A /* ComprehensiveTests.swift */,
+				294469A88632E5C55A7FF457 /* LaunchdServiceTests.swift */,
+				0501F9EA91D0364250B8E49C /* ScheduleCalculatorTests.swift */,
+				6C986CB49FCDD04CBF3DD8CF /* TaskRunTests.swift */,
+				C6E3230D837A152B50C9BA5D /* TaskScheduleTests.swift */,
+			);
+			path = ClaudeCronTests;
+			sourceTree = "<group>";
+		};
+		FB8BBBFF264B1545DD71A1BF /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				802D8AF02ADF5F375EA33F5D /* ContentView.swift */,
+				97E80FA8667D44CE87C473FC /* MenuBarView.swift */,
+				4FAF49D140603D7962776ED5 /* RunDetailView.swift */,
+				D0F026B115548C508DC47C3C /* SettingsView.swift */,
+				A5E5623816DC0A8631EB25EB /* TaskDetailView.swift */,
+				EFEA3A6F5DE56E686D5375EA /* TaskFormView.swift */,
+				98F65076F11292D4A1545472 /* TaskListView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8D58E878C2B3B774B62AB9FE /* ClaudeCronTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1729B963DFD9DA7C1F21964C /* Build configuration list for PBXNativeTarget "ClaudeCronTests" */;
+			buildPhases = (
+				544D3C7FB5C488397A8B13C7 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				31EFED1210D18B2715958FB1 /* PBXTargetDependency */,
+			);
+			name = ClaudeCronTests;
+			packageProductDependencies = (
+			);
+			productName = ClaudeCronTests;
+			productReference = 878D3387E71A23C164B000BA /* ClaudeCronTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		B6DA0F0CD88C2F9B06ACA1F7 /* ClaudeCron */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 09A4CDD4436E1B09F7EEFA26 /* Build configuration list for PBXNativeTarget "ClaudeCron" */;
+			buildPhases = (
+				2D1A215986E5DB7415F954A4 /* Sources */,
+				CC3D4E5F6A7B8C9D0E1F2A3B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ClaudeCron;
+			packageProductDependencies = (
+			);
+			productName = ClaudeCron;
+			productReference = 763D465DC7B584A173260BF5 /* ClaudeCron.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		78DBDF6FF06CC4F09AC26610 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = E3C47CB7072E93D85B911192 /* Build configuration list for PBXProject "ClaudeCron" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 44FA5B7EA7CA0495554C94FC;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 077AF8FE9FF893311352E089 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B6DA0F0CD88C2F9B06ACA1F7 /* ClaudeCron */,
+				8D58E878C2B3B774B62AB9FE /* ClaudeCronTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2D1A215986E5DB7415F954A4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				443191CD65C097182C6758E8 /* ClaudeCronApp.swift in Sources */,
+				7F64DCFB69A2106AFF1C46B7 /* ClaudeService.swift in Sources */,
+				A651C1D3A6FDA91416352ED6 /* ClaudeTask.swift in Sources */,
+				CE368DE79EBDBF0BD1719810 /* ContentView.swift in Sources */,
+				5D7F63B7F0CDB675AC00F5F7 /* LaunchdService.swift in Sources */,
+				A68995C3F048C7CF56F7EA5B /* MenuBarView.swift in Sources */,
+				3890B580928A7F949580D10A /* RunDetailView.swift in Sources */,
+				B8F3EBA576F1F5DC9E2C9AB0 /* ScheduleCalculator.swift in Sources */,
+				A7F930CE7E629F92BBD8828B /* ScheduleType.swift in Sources */,
+				9FF60926A3CB4E43F71B9239 /* SettingsView.swift in Sources */,
+				90F81C7E68B5DA5CA76A877A /* TaskDetailView.swift in Sources */,
+				48ACB68ECC44934648AA2418 /* TaskFormView.swift in Sources */,
+				D23FD700BC6293E526BE91A6 /* TaskListView.swift in Sources */,
+				BAC9735A6F7A44A22A172BDE /* TaskRun.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		544D3C7FB5C488397A8B13C7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				306600A8F2CA9CA7CFD6C156 /* ClaudeServiceTests.swift in Sources */,
+				74742489C67015D8128AAC85 /* ClaudeTaskTests.swift in Sources */,
+				2A1B3C4D5E6F7A8B9C0D1E2F /* ComprehensiveTests.swift in Sources */,
+				F4B3E4963B83F95D1F6F1DD0 /* LaunchdServiceTests.swift in Sources */,
+				40420538147E209AE9FDB36A /* ScheduleCalculatorTests.swift in Sources */,
+				FE1731942F92D16E14F67103 /* TaskRunTests.swift in Sources */,
+				B2570FE3B0D5181E07A3571B /* TaskScheduleTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CC3D4E5F6A7B8C9D0E1F2A3B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB2C3D4E5F6A7B8C9D0E1F2A /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		31EFED1210D18B2715958FB1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B6DA0F0CD88C2F9B06ACA1F7 /* ClaudeCron */;
+			targetProxy = 7662EEB962BF534037D4FFCE /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0D79919FDE2569356C8B9B40 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		19C13DC6CFA9C7C34A7B3B8D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSHighResolutionCapable = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.claudecron.app;
+				PRODUCT_MODULE_NAME = ClaudeCron;
+				PRODUCT_NAME = "Claude Cron";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		6A0ABBEB05D22892620E74DF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.claudecron.ClaudeCronTests;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Claude Cron.app/Contents/MacOS/Claude Cron";
+			};
+			name = Debug;
+		};
+		6CB1E79FDEE806C69E64C92C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		B0CF03A3276D8D8B7B6C4997 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_NSHighResolutionCapable = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.claudecron.app;
+				PRODUCT_MODULE_NAME = ClaudeCron;
+				PRODUCT_NAME = "Claude Cron";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		B5C797D0F46DA9620F99C17A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.claudecron.ClaudeCronTests;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Claude Cron.app/Contents/MacOS/Claude Cron";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		09A4CDD4436E1B09F7EEFA26 /* Build configuration list for PBXNativeTarget "ClaudeCron" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				19C13DC6CFA9C7C34A7B3B8D /* Debug */,
+				B0CF03A3276D8D8B7B6C4997 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		1729B963DFD9DA7C1F21964C /* Build configuration list for PBXNativeTarget "ClaudeCronTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6A0ABBEB05D22892620E74DF /* Debug */,
+				B5C797D0F46DA9620F99C17A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E3C47CB7072E93D85B911192 /* Build configuration list for PBXProject "ClaudeCron" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6CB1E79FDEE806C69E64C92C /* Debug */,
+				0D79919FDE2569356C8B9B40 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 78DBDF6FF06CC4F09AC26610 /* Project object */;
+}
