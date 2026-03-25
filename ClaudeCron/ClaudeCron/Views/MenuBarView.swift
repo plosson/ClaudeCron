@@ -39,9 +39,11 @@ struct MenuBarView: View {
             if cliInstalled {
                 try CLIInstallService.uninstall()
                 cliInstalled = false
+                sendNotification(title: "CLI Uninstalled", body: "ccron has been removed from /usr/local/bin")
             } else {
                 try CLIInstallService.install()
                 cliInstalled = true
+                sendNotification(title: "CLI Installed", body: "ccron is now available in your terminal")
             }
         } catch {
             let command = cliInstalled
@@ -49,12 +51,16 @@ struct MenuBarView: View {
                 : CLIInstallService.manualInstallCommand
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(command, forType: .string)
-
-            let content = UNMutableNotificationContent()
-            content.title = "CLI Install Failed"
-            content.body = "Command copied to clipboard: \(command)"
-            let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
-            UNUserNotificationCenter.current().add(request)
+            sendNotification(title: "CLI Install Failed", body: "Run manually: \(command) (copied to clipboard)")
         }
+    }
+
+    private func sendNotification(title: String, body: String) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
     }
 }
