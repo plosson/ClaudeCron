@@ -18,6 +18,7 @@
 		48431A7C0178DF04B0AE6CEE /* ConfigIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6104F1BA6C5D565A6CCF884B /* ConfigIntegrationTests.swift */; };
 		48ACB68ECC44934648AA2418 /* TaskFormView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFEA3A6F5DE56E686D5375EA /* TaskFormView.swift */; };
 		4A7F5D0A05A20EAE3ED4E8F4 /* CLIInstallService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F96121D4D19800977B36D41 /* CLIInstallService.swift */; };
+		AA1B2C3D4E5F6A7B8C9D0E1F /* CLIHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB2C3D4E5F6A7B8C9D0E1F2A /* CLIHandler.swift */; };
 		5D24D2E6DAEF076C7F505C3E /* TaskDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = F899884301F4867CD0480FF3 /* TaskDefinition.swift */; };
 		5D7F63B7F0CDB675AC00F5F7 /* LaunchdService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4BF8B563B68870E0BA6773 /* LaunchdService.swift */; };
 		74742489C67015D8128AAC85 /* ClaudeTaskTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF980197A18DEF24F6DC3902 /* ClaudeTaskTests.swift */; };
@@ -70,6 +71,7 @@
 		802D8AF02ADF5F375EA33F5D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		878D3387E71A23C164B000BA /* ClaudeCronTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClaudeCronTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F96121D4D19800977B36D41 /* CLIInstallService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIInstallService.swift; sourceTree = "<group>"; };
+		BB2C3D4E5F6A7B8C9D0E1F2A /* CLIHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIHandler.swift; sourceTree = "<group>"; };
 		9040C1517A4F0A44B9BC2254 /* TaskRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRun.swift; sourceTree = "<group>"; };
 		97E80FA8667D44CE87C473FC /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		98F65076F11292D4A1545472 /* TaskListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskListView.swift; sourceTree = "<group>"; };
@@ -98,6 +100,7 @@
 		3FC1B32035D1A14D38F2130D /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				BB2C3D4E5F6A7B8C9D0E1F2A /* CLIHandler.swift */,
 				B24809E1081572F781DA7D88 /* ClaudeService.swift */,
 				8F96121D4D19800977B36D41 /* CLIInstallService.swift */,
 				059D2B262A583D8C517A3E99 /* ConfigService.swift */,
@@ -259,6 +262,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA1B2C3D4E5F6A7B8C9D0E1F /* CLIHandler.swift in Sources */,
 				4A7F5D0A05A20EAE3ED4E8F4 /* CLIInstallService.swift in Sources */,
 				443191CD65C097182C6758E8 /* ClaudeCronApp.swift in Sources */,
 				7F64DCFB69A2106AFF1C46B7 /* ClaudeService.swift in Sources */,

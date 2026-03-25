@@ -31,42 +31,15 @@ struct ClaudeCronApp: App {
             exit(1)
         }
 
-        if isCLI && !args.contains("--run-task") {
+        if isCLI {
             cliMode = true
-            printCLIHelp()
-            exit(0)
+            CLIHandler.run(container: Self.sharedContainer)
+            // CLIHandler.run() calls exit(), so we never reach here
         }
 
         if args.contains("--run-task") {
             cliMode = true
-            // New format: --run-task --source-folder <folder> --task-id <id>
-            if let folderIdx = args.firstIndex(of: "--source-folder"),
-               folderIdx + 1 < args.count,
-               let idIdx = args.firstIndex(of: "--task-id"),
-               idIdx + 1 < args.count {
-                let folder = args[folderIdx + 1]
-                let taskId = args[idIdx + 1]
-                let descriptor = FetchDescriptor<ClaudeTask>(
-                    predicate: #Predicate { $0.sourceFolder == folder && $0.taskId == taskId }
-                )
-                runTaskHeadless(descriptor: descriptor, errorLabel: "\(folder)::\(taskId)")
-            } else if let idx = args.firstIndex(of: "--run-task"),
-                      idx + 1 < args.count,
-                      args[idx + 1] != "--source-folder" {
-                // Legacy format: --run-task <UUID>
-                let taskIdString = args[idx + 1]
-                guard let uuid = UUID(uuidString: taskIdString) else {
-                    print("Invalid task ID: \(taskIdString)")
-                    exit(1)
-                }
-                let descriptor = FetchDescriptor<ClaudeTask>(
-                    predicate: #Predicate { $0.id == uuid }
-                )
-                runTaskHeadless(descriptor: descriptor, errorLabel: taskIdString)
-            } else {
-                print("Usage: --run-task --source-folder <folder> --task-id <id>")
-                exit(1)
-            }
+            CLIHandler.run(container: Self.sharedContainer)
         }
     }
 
@@ -84,27 +57,5 @@ struct ClaudeCronApp: App {
                 .modelContainer(Self.sharedContainer)
                 .environment(folderRegistry)
         }
-    }
-
-    private func printCLIHelp() {
-        let name = CLIInstallService.cliName
-        print("""
-        \(name) - Claude Cron command line tool
-
-        Usage:
-          \(name) --run-task --source-folder <folder> --task-id <id>
-          \(name) --help
-        """)
-    }
-
-    private func runTaskHeadless(descriptor: FetchDescriptor<ClaudeTask>, errorLabel: String) {
-        let context = Self.sharedContainer.mainContext
-        guard let task = try? context.fetch(descriptor).first else {
-            print("Task not found: \(errorLabel)")
-            exit(1)
-        }
-        LaunchdService.shared.triggerNow(task: task, modelContext: context, onDone: { exitCode in
-            exit(exitCode == 0 ? 0 : 1)
-        })
     }
 }
