@@ -431,7 +431,85 @@ enum CLIHandler {
         let days = str.lowercased().split(separator: ",").compactMap { map[String($0).trimmingCharacters(in: .whitespaces)] }
         return Set(days)
     }
-    static func cmdEdit(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
+    // MARK: - edit
+
+    static func cmdEdit(subargs: [String], container: ModelContainer) {
+        guard let taskId = subargs.first else {
+            printError("Usage: ccron edit <task-id> [options]")
+            exit(1)
+        }
+        guard let task = resolveTask(taskId, container: container) else {
+            printError("Task not found: \(taskId)")
+            exit(1)
+        }
+
+        let context = ModelContext(container)
+        // Re-fetch in this context
+        let uuid = task.id
+        let descriptor = FetchDescriptor<ClaudeTask>(predicate: #Predicate { $0.id == uuid })
+        guard let editTask = try? context.fetch(descriptor).first else {
+            printError("Task not found in context")
+            exit(1)
+        }
+
+        var changed = false
+
+        if let prompt = flagValue("--prompt", in: subargs) {
+            editTask.prompt = prompt; changed = true
+        }
+        if let dir = flagValue("--directory", in: subargs) {
+            editTask.directory = dir; changed = true
+        }
+        if let model = flagValue("--model", in: subargs) {
+            editTask.model = model; changed = true
+        }
+        if let perm = flagValue("--permissions", in: subargs) {
+            editTask.permissionMode = perm; changed = true
+        }
+        if let sm = flagValue("--session-mode", in: subargs), let mapped = mapSessionMode(sm) {
+            editTask.sessionMode = mapped.rawValue; changed = true
+        }
+        if let tools = flagValue("--allowed-tools", in: subargs) {
+            editTask.allowedTools = tools; changed = true
+        }
+        if let tools = flagValue("--disallowed-tools", in: subargs) {
+            editTask.disallowedTools = tools; changed = true
+        }
+        if hasFlag("--notify-start", in: subargs) {
+            editTask.notifyOnStart = true; changed = true
+        }
+        if hasFlag("--no-notify-start", in: subargs) {
+            editTask.notifyOnStart = false; changed = true
+        }
+        if hasFlag("--notify-end", in: subargs) {
+            editTask.notifyOnEnd = true; changed = true
+        }
+        if hasFlag("--no-notify-end", in: subargs) {
+            editTask.notifyOnEnd = false; changed = true
+        }
+        if flagValue("--schedule", in: subargs) != nil {
+            editTask.schedule = parseSchedule(from: subargs); changed = true
+        }
+
+        guard changed else {
+            printError("No options specified. Nothing to edit.")
+            exit(1)
+        }
+
+        try? context.save()
+
+        // Re-persist to JSON
+        let folder = editTask.sourceFolder
+        let isGlobal = folder == NSHomeDirectory()
+        var settings = ConfigService.shared.read(folder: folder)
+        settings.tasks[editTask.taskId] = editTask.toTaskDefinition(isGlobal: isGlobal)
+        try? ConfigService.shared.write(settings, to: folder)
+
+        // Reinstall launchd
+        LaunchdService.shared.install(task: editTask)
+
+        print("Updated task '\(editTask.name)' (\(editTask.taskId))")
+    }
     static func cmdDelete(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
     static func cmdEnable(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
     static func cmdDisable(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
