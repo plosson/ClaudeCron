@@ -7,12 +7,37 @@ struct TaskListView: View {
     @Binding var showingNewTask: Bool
     @Binding var showingSettings: Bool
     var onAddFolder: () -> Void
+    var onResync: () -> Void
+    var onRemoveFolder: (String) -> Void
+
+    var tasksByFolder: [(String, [ClaudeTask])] {
+        let grouped = Dictionary(grouping: tasks) { $0.sourceFolder }
+        return grouped.sorted { $0.key < $1.key }
+    }
 
     var body: some View {
         List(selection: $selectedTask) {
-            ForEach(tasks) { task in
-                TaskRowView(task: task)
-                    .tag(task)
+            ForEach(tasksByFolder, id: \.0) { folder, folderTasks in
+                Section {
+                    ForEach(folderTasks) { task in
+                        TaskRowView(task: task)
+                            .tag(task)
+                    }
+                } header: {
+                    HStack {
+                        let displayName = folder == NSHomeDirectory() ? "Global" : (folder as NSString).lastPathComponent
+                        Text(displayName)
+                        Spacer()
+                        if folder != NSHomeDirectory() {
+                            Button(action: { onRemoveFolder(folder) }) {
+                                Image(systemName: "xmark.circle")
+                                    .font(.caption)
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(.secondary)
+                        }
+                    }
+                }
             }
         }
         .listStyle(.sidebar)
@@ -30,6 +55,11 @@ struct TaskListView: View {
                 HStack(spacing: 12) {
                     Button(action: { showingSettings = true }) {
                         Label("Settings", systemImage: "gear")
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.secondary)
+                    Button(action: onResync) {
+                        Label("Resync", systemImage: "arrow.clockwise")
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)

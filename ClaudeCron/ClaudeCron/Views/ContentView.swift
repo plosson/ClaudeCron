@@ -17,7 +17,9 @@ struct ContentView: View {
                 selectedTask: $selectedTask,
                 showingNewTask: $showingNewTask,
                 showingSettings: $showingSettings,
-                onAddFolder: addFolder
+                onAddFolder: addFolder,
+                onResync: resyncAll,
+                onRemoveFolder: removeFolder
             )
             .frame(minWidth: 220)
         } content: {
@@ -81,11 +83,7 @@ struct ContentView: View {
         .frame(minWidth: 900, minHeight: 500)
         .onAppear {
             UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
-            // Import tasks from all registered folders on launch
-            for folder in folderRegistry.allFolders {
-                importFolder(folder)
-            }
-            LaunchdService.shared.syncAll(modelContext: modelContext)
+            resyncAll()
         }
     }
 
@@ -115,6 +113,44 @@ struct ContentView: View {
         var settings = ConfigService.shared.read(folder: folder)
         settings.tasks.removeValue(forKey: task.taskId)
         try? ConfigService.shared.write(settings, to: folder)
+    }
+
+    private func resyncAll() {
+        for folder in folderRegistry.allFolders {
+            importFolder(folder)
+        }
+
+        // Remove tasks whose taskId no longer exists in their source settings file
+        let descriptor = FetchDescriptor<ClaudeTask>()
+        guard let allTasks = try? modelContext.fetch(descriptor) else { return }
+
+        for task in allTasks {
+            guard !task.sourceFolder.isEmpty else { continue }
+            let settings = ConfigService.shared.read(folder: task.sourceFolder)
+            if settings.tasks[task.taskId] == nil {
+                LaunchdService.shared.uninstall(task: task)
+                modelContext.delete(task)
+            }
+        }
+        try? modelContext.save()
+    }
+
+    private func removeFolder(_ folder: String) {
+        // Delete all tasks from this folder
+        let descriptor = FetchDescriptor<ClaudeTask>(
+            predicate: #Predicate { task in
+                task.sourceFolder == folder
+            }
+        )
+        if let tasks = try? modelContext.fetch(descriptor) {
+            for task in tasks {
+                LaunchdService.shared.uninstall(task: task)
+                modelContext.delete(task)
+            }
+        }
+        try? modelContext.save()
+        folderRegistry.remove(folder)
+        selectedTask = nil
     }
 
     private func importFolder(_ folderPath: String) {
