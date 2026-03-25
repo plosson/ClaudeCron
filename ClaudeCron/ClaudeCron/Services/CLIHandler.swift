@@ -210,9 +210,80 @@ enum CLIHandler {
         print("\n\(tasks.count) task(s)")
     }
 
+    // MARK: - show
+
+    static func cmdShow(subargs: [String], container: ModelContainer) {
+        guard let taskId = subargs.first else {
+            printError("Usage: ccron show <task-id>")
+            exit(1)
+        }
+        guard let task = resolveTask(taskId, container: container) else {
+            printError("Task not found: \(taskId)")
+            exit(1)
+        }
+
+        print("Name:         \(task.name)")
+        print("Task ID:      \(task.taskId)")
+        print("Folder:       \(displayFolder(task.sourceFolder))")
+        print("Status:       \(task.isEnabled ? "Enabled" : "Disabled")")
+        print("Model:        \(task.model)")
+        print("Permissions:  \(task.permissionMode)")
+        print("Schedule:     \(task.schedule.displaySummary)")
+        print("Session:      \(task.sessionMode)")
+        if let sid = task.sessionId { print("Session ID:   \(sid)") }
+        print("Directory:    \(task.directory)")
+        print("")
+        print("Prompt:")
+        print("  \(task.prompt)")
+
+        if !task.allowedTools.isEmpty {
+            print("\nAllowed tools: \(task.allowedTools)")
+        }
+        if !task.disallowedTools.isEmpty {
+            print("\nDisallowed tools: \(task.disallowedTools)")
+        }
+
+        print("\nNotifications: start=\(task.notifyOnStart ? "on" : "off"), end=\(task.notifyOnEnd ? "on" : "off")")
+
+        // Upcoming runs
+        let upcoming = ScheduleCalculator.nextRuns(for: task.schedule, count: 3)
+        if !upcoming.isEmpty {
+            let fmt = DateFormatter()
+            fmt.dateStyle = .medium
+            fmt.timeStyle = .short
+            print("\nUpcoming runs:")
+            for date in upcoming {
+                print("  \(fmt.string(from: date))")
+            }
+        }
+
+        // Recent runs
+        let context = ModelContext(container)
+        let taskUUID = task.id
+        var runDescriptor = FetchDescriptor<TaskRun>(
+            predicate: #Predicate { $0.task?.id == taskUUID }
+        )
+        runDescriptor.sortBy = [SortDescriptor(\.startedAt, order: .reverse)]
+        runDescriptor.fetchLimit = 5
+        if let runs = try? context.fetch(runDescriptor), !runs.isEmpty {
+            let dateFmt = DateFormatter()
+            dateFmt.dateStyle = .short
+            dateFmt.timeStyle = .short
+            print("\nRecent runs:")
+            let header = String(format: "  %-20s  %-10s  %-10s  %s", "DATE", "STATUS", "DURATION", "RUN ID")
+            print(header)
+            for run in runs {
+                let date = dateFmt.string(from: run.startedAt)
+                let status = run.runStatus.rawValue
+                let duration = run.duration.map { formatDuration($0) } ?? "-"
+                let runId = String(run.id.uuidString.prefix(8))
+                print(String(format: "  %-20s  %-10s  %-10s  %s", date, status, duration, runId))
+            }
+        }
+    }
+
     // MARK: - Command stubs (implemented in subsequent tasks)
 
-    static func cmdShow(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
     static func cmdCreate(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
     static func cmdEdit(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
     static func cmdDelete(subargs: [String], container: ModelContainer) { printError("Not yet implemented"); exit(1) }
