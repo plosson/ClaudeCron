@@ -45,6 +45,8 @@ jobs:
             -configuration Release \
             -derivedDataPath build/derived \
             -destination "platform=macOS" \
+            MARKETING_VERSION="$VERSION" \
+            CURRENT_PROJECT_VERSION="$VERSION" \
             build
 
           # Assemble .app bundle

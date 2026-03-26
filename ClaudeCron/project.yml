@@ -33,8 +33,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.claudecron.app
         PRODUCT_NAME: Claude Cron
         PRODUCT_MODULE_NAME: ClaudeCron
-        MARKETING_VERSION: "0.1.0"
-        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "0.2.0"
+        CURRENT_PROJECT_VERSION: "0.2.0"
         SWIFT_VERSION: "5.9"
         MACOSX_DEPLOYMENT_TARGET: "14.0"
         CODE_SIGN_ENTITLEMENTS: "ClaudeCron/ClaudeCron.entitlements"
