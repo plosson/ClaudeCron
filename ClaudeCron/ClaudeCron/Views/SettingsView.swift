@@ -5,7 +5,7 @@ struct SettingsView: View {
     @AppStorage("defaultWorkingDirectory") private var defaultWorkingDirectory = "~/Projects"
     @AppStorage("defaultModel") private var defaultModel = "sonnet"
     @AppStorage("autoScrollLogs") private var autoScrollLogs = true
-    @EnvironmentObject private var updateService: UpdateService
+    @Environment(UpdateService.self) private var updateService
 
     var onClose: () -> Void
 

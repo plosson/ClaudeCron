@@ -1,6 +1,7 @@
 import XCTest
 @testable import ClaudeCron
 
+@MainActor
 final class ClaudeServiceTests: XCTestCase {
 
     func testExtractSessionIdFromValidOutput() {

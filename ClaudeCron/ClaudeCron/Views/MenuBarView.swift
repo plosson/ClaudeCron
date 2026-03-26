@@ -5,7 +5,7 @@ import UserNotifications
 
 struct MenuBarView: View {
     @Query(sort: \ClaudeTask.createdAt) private var tasks: [ClaudeTask]
-    @EnvironmentObject private var updateService: UpdateService
+    @Environment(UpdateService.self) private var updateService
     @State private var cliInstalled = false
 
     var body: some View {

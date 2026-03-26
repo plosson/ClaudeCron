@@ -1,6 +1,7 @@
 import Foundation
 
 @Observable
+@MainActor
 final class ClaudeService {
     static let shared = ClaudeService()
 
@@ -40,9 +41,9 @@ final class ClaudeService {
         sessionId: String?,
         allowedTools: [String],
         disallowedTools: [String],
-        onOutput: @escaping (String) -> Void,
-        onLog: @escaping (String) -> Void = { _ in },
-        onComplete: @escaping (Int32, String?) -> Void
+        onOutput: @MainActor @escaping @Sendable (String) -> Void,
+        onLog: @MainActor @escaping @Sendable (String) -> Void = { _ in },
+        onComplete: @MainActor @escaping @Sendable (Int32, String?) -> Void
     ) -> UUID? {
         onLog("Resolving claude binary path...")
         guard let claudeBin = claudePath() else {
@@ -91,12 +92,12 @@ final class ClaudeService {
         outputPipe.fileHandleForReading.readabilityHandler = { handle in
             let data = handle.availableData
             if !data.isEmpty, let str = String(data: data, encoding: .utf8) {
-                DispatchQueue.main.async { onOutput(str) }
+                Task { @MainActor in onOutput(str) }
             }
         }
 
         process.terminationHandler = { [weak self] proc in
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 self?.runningProcesses.removeValue(forKey: runId)
                 let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
                 let errorStr = String(data: errorData, encoding: .utf8) ?? ""

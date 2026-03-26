@@ -1,6 +1,7 @@
 import Foundation
 
 @Observable
+@MainActor
 final class FolderRegistry {
     private let defaults: UserDefaults
     private let key = "registeredFolders"

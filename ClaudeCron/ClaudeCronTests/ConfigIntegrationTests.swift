@@ -1,6 +1,7 @@
 import XCTest
 @testable import ClaudeCron
 
+@MainActor
 final class ConfigIntegrationTests: XCTestCase {
     var tempDir: URL!
 

@@ -1,12 +1,16 @@
 import Foundation
+import Combine
 import Sparkle
 
-final class UpdateService: ObservableObject {
+@Observable
+@MainActor
+final class UpdateService {
     static let shared = UpdateService()
 
     private let updaterController: SPUStandardUpdaterController
+    private var cancellable: AnyCancellable?
 
-    @Published var canCheckForUpdates = false
+    var canCheckForUpdates = false
 
     var automaticallyChecksForUpdates: Bool {
         get { updaterController.updater.automaticallyChecksForUpdates }
@@ -22,8 +26,11 @@ final class UpdateService: ObservableObject {
     }
 
     func startUpdater() {
-        updaterController.updater.publisher(for: \.canCheckForUpdates)
-            .assign(to: &$canCheckForUpdates)
+        cancellable = updaterController.updater.publisher(for: \.canCheckForUpdates)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] value in
+                self?.canCheckForUpdates = value
+            }
         updaterController.startUpdater()
     }
 

@@ -6,7 +6,7 @@ import Sparkle
 struct ClaudeCronApp: App {
     @State private var cliMode = false
     @State private var folderRegistry = FolderRegistry()
-    @StateObject private var updateService = UpdateService.shared
+    @State private var updateService = UpdateService.shared
 
     static let sharedContainer: ModelContainer = {
         let schema = Schema([ClaudeTask.self, TaskRun.self])
@@ -77,7 +77,7 @@ struct ClaudeCronApp: App {
             if !cliMode {
                 ContentView()
                     .environment(folderRegistry)
-                    .environmentObject(updateService)
+                    .environment(updateService)
                     .onAppear { updateService.startUpdater() }
             }
         }
@@ -87,7 +87,7 @@ struct ClaudeCronApp: App {
             MenuBarView()
                 .modelContainer(Self.sharedContainer)
                 .environment(folderRegistry)
-                .environmentObject(updateService)
+                .environment(updateService)
         }
     }
 

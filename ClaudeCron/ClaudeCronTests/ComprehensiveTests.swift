@@ -77,6 +77,7 @@ final class MonthlyScheduleDay31Tests: XCTestCase {
 
 // MARK: - 3. Tool String Whitespace (LaunchdService.triggerNow)
 
+@MainActor
 final class ToolParsingTests: XCTestCase {
 
     // FIXED: Comma-separated tools with spaces are now trimmed
@@ -204,6 +205,7 @@ final class ScheduleCalculatorBugTests: XCTestCase {
 
 // MARK: - 8. PermissionMode Missing Cases in buildArgs
 
+@MainActor
 final class PermissionModeBuildArgsTests: XCTestCase {
 
     // BUG: Only "bypassPermissions" is handled in buildArgs.
@@ -293,6 +295,7 @@ final class DisplaySummaryBugTests: XCTestCase {
 
 // MARK: - 11. extractSessionId Regex (FIXED)
 
+@MainActor
 final class SessionIdRegexBugTests: XCTestCase {
 
     // FIXED: Regex now requires full UUID format (8-4-4-4-12)
@@ -321,6 +324,7 @@ final class SessionIdRegexBugTests: XCTestCase {
 
 // MARK: - 12. Plist Weekly Weekday 0-based Conversion
 
+@MainActor
 final class PlistWeekdayConversionTests: XCTestCase {
 
     // Verify Sunday (1 in Calendar) maps to 0 in launchd
@@ -428,6 +432,7 @@ final class ScheduleCalculatorCorrectnessTests: XCTestCase {
     }
 }
 
+@MainActor
 final class BuildArgsCorrectnessTests: XCTestCase {
     private let bin = "/usr/local/bin/claude"
 
@@ -485,6 +490,7 @@ final class TaskModelCorrectnessTests: XCTestCase {
     }
 }
 
+@MainActor
 final class PlistCorrectnessTests: XCTestCase {
 
     func testDailyPlistStructure() {

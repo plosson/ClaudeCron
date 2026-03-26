@@ -1,6 +1,7 @@
 import XCTest
 @testable import ClaudeCron
 
+@MainActor
 final class FolderRegistryTests: XCTestCase {
     var registry: FolderRegistry!
     var defaults: UserDefaults!

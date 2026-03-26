@@ -1,6 +1,7 @@
 import XCTest
 @testable import ClaudeCron
 
+@MainActor
 final class LaunchdServiceTests: XCTestCase {
 
     private let service = LaunchdService.shared
