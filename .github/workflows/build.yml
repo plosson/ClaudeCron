@@ -31,8 +31,8 @@ jobs:
             -s -k "" build.keychain
           rm /tmp/app.p12
 
-      - name: Install xcodegen
-        run: brew install xcodegen
+      - name: Install tools
+        run: brew install xcodegen create-dmg
 
       - name: Build
         run: |
@@ -92,10 +92,19 @@ jobs:
       - name: Create DMG
         run: |
           VERSION=$(git describe --tags --abbrev=0 | sed 's/^v//')
-          hdiutil create -volname "Claude Cron" \
-            -srcfolder "build/release/Claude Cron.app" \
-            -ov -format UDZO \
-            "build/ClaudeCron-${VERSION}.dmg"
+          create-dmg \
+            --volname "Claude Cron" \
+            --volicon "dmg/VolumeIcon.icns" \
+            --background "dmg/background.png" \
+            --window-pos 200 120 \
+            --window-size 660 400 \
+            --icon-size 80 \
+            --text-size 14 \
+            --icon "Claude Cron.app" 180 170 \
+            --hide-extension "Claude Cron.app" \
+            --app-drop-link 480 170 \
+            "build/ClaudeCron-${VERSION}.dmg" \
+            "build/release/Claude Cron.app"
           codesign --force --sign "Developer ID Application: SPRL Losson (427N276E3Q)" \
             --timestamp "build/ClaudeCron-${VERSION}.dmg"
 
