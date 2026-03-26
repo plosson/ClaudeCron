@@ -40,6 +40,8 @@
 		EF1B7C95874B29406FBFC61F /* ComprehensiveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15DDC94366DAE6BDE2BC50C1 /* ComprehensiveTests.swift */; };
 		F4B3E4963B83F95D1F6F1DD0 /* LaunchdServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294469A88632E5C55A7FF457 /* LaunchdServiceTests.swift */; };
 		FE1731942F92D16E14F67103 /* TaskRunTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C986CB49FCDD04CBF3DD8CF /* TaskRunTests.swift */; };
+		AA1B2C3D4E5F60718293A4B5 /* SparklineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB2C3D4E5F60718293A4B5C6 /* SparklineView.swift */; };
+		CC3D4E5F60718293A4B5C6D7 /* TaskCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD4E5F60718293A4B5C6D7E8 /* TaskCardView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -89,6 +91,8 @@
 		F12171DDC8B56573B540ABA7 /* CLIInstallServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIInstallServiceTests.swift; sourceTree = "<group>"; };
 		F899884301F4867CD0480FF3 /* TaskDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskDefinition.swift; sourceTree = "<group>"; };
 		FD019193EE833858E20AB800 /* ScheduleType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleType.swift; sourceTree = "<group>"; };
+		BB2C3D4E5F60718293A4B5C6 /* SparklineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparklineView.swift; sourceTree = "<group>"; };
+		DD4E5F60718293A4B5C6D7E8 /* TaskCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskCardView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -186,6 +190,8 @@
 				97E80FA8667D44CE87C473FC /* MenuBarView.swift */,
 				4FAF49D140603D7962776ED5 /* RunDetailView.swift */,
 				D0F026B115548C508DC47C3C /* SettingsView.swift */,
+				BB2C3D4E5F60718293A4B5C6 /* SparklineView.swift */,
+				DD4E5F60718293A4B5C6D7E8 /* TaskCardView.swift */,
 				A5E5623816DC0A8631EB25EB /* TaskDetailView.swift */,
 				EFEA3A6F5DE56E686D5375EA /* TaskFormView.swift */,
 				98F65076F11292D4A1545472 /* TaskListView.swift */,
@@ -297,6 +303,8 @@
 				B8F3EBA576F1F5DC9E2C9AB0 /* ScheduleCalculator.swift in Sources */,
 				A7F930CE7E629F92BBD8828B /* ScheduleType.swift in Sources */,
 				9FF60926A3CB4E43F71B9239 /* SettingsView.swift in Sources */,
+				AA1B2C3D4E5F60718293A4B5 /* SparklineView.swift in Sources */,
+				CC3D4E5F60718293A4B5C6D7 /* TaskCardView.swift in Sources */,
 				5D24D2E6DAEF076C7F505C3E /* TaskDefinition.swift in Sources */,
 				90F81C7E68B5DA5CA76A877A /* TaskDetailView.swift in Sources */,
 				48ACB68ECC44934648AA2418 /* TaskFormView.swift in Sources */,
