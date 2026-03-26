@@ -16,16 +16,27 @@
                 sparkle:edSignature="I1NdEe9suI3XnliPBLt2VtKWf67YiUwPEIfl2RdCeDdldViMYBu8NEYrzKmDj7HeEMyePzbxwFV6fyaTB5csDg==" length="1846588"
                 type="application/octet-stream" />
         </item>
-            <item>
-        <title>Version 0.2.1</title>
-        <pubDate>Thu, 26 Mar 2026 11:30:45 +0000</pubDate>
-        <sparkle:version>0.2.1</sparkle:version>
-        <sparkle:shortVersionString>0.2.1</sparkle:shortVersionString>
-        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-        <enclosure
-            url="https://github.com/plosson/ClaudeCron/releases/download/v0.2.1/ClaudeCron-0.2.1.dmg"
-            sparkle:edSignature="0q8IJZQr0FBgv5mQ4jsxIoBCoR9jors31YgbPjxOdtQtMsJukJd4iR/cJWXBFMHaU6bYA69HfReRoT27DDH8Aw==" length="1696037"
-            type="application/octet-stream" />
-    </item>
+        <item>
+            <title>Version 0.2.1</title>
+            <pubDate>Thu, 26 Mar 2026 11:30:45 +0000</pubDate>
+            <sparkle:version>0.2.1</sparkle:version>
+            <sparkle:shortVersionString>0.2.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/plosson/ClaudeCron/releases/download/v0.2.1/ClaudeCron-0.2.1.dmg"
+                sparkle:edSignature="0q8IJZQr0FBgv5mQ4jsxIoBCoR9jors31YgbPjxOdtQtMsJukJd4iR/cJWXBFMHaU6bYA69HfReRoT27DDH8Aw==" length="1696037"
+                type="application/octet-stream" />
+        </item>
+        <item>
+            <title>Version 0.2.2</title>
+            <pubDate>Thu, 26 Mar 2026 11:56:40 +0000</pubDate>
+            <sparkle:version>0.2.2</sparkle:version>
+            <sparkle:shortVersionString>0.2.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/plosson/ClaudeCron/releases/download/v0.2.2/ClaudeCron-0.2.2.dmg"
+                sparkle:edSignature="x3Iy92xCq0OrInUP9HXVFKKDxVhCpLUrG06wwnzr6fdJGcfNQYpmqlNiPrpy28xQbHEyuB0fJrDCHaRqWk6wCw==" length="1695648"
+                type="application/octet-stream" />
+        </item>
     </channel>
 </rss>

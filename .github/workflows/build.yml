@@ -186,8 +186,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Save the updated appcast before switching branches
+          cp appcast.xml /tmp/appcast.xml
           git fetch origin main
           git checkout main
+          cp /tmp/appcast.xml appcast.xml
           git add appcast.xml
           git commit -m "chore: update appcast.xml for v${RELEASE_VERSION}" || true
           git push origin main
