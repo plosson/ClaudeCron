@@ -108,7 +108,6 @@ struct ContentView: View {
         }
         .onChange(of: selectedTask) { _, _ in
             selectedRun = nil
-            columnVisibility = .doubleColumn
         }
         .onAppear {
             UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
