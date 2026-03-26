@@ -38,5 +38,16 @@
                 sparkle:edSignature="x3Iy92xCq0OrInUP9HXVFKKDxVhCpLUrG06wwnzr6fdJGcfNQYpmqlNiPrpy28xQbHEyuB0fJrDCHaRqWk6wCw==" length="1695648"
                 type="application/octet-stream" />
         </item>
+            <item>
+        <title>Version 0.2.3</title>
+        <pubDate>Thu, 26 Mar 2026 12:46:22 +0000</pubDate>
+        <sparkle:version>0.2.3</sparkle:version>
+        <sparkle:shortVersionString>0.2.3</sparkle:shortVersionString>
+        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+        <enclosure
+            url="https://github.com/plosson/ClaudeCron/releases/download/v0.2.3/ClaudeCron-0.2.3.dmg"
+            sparkle:edSignature="/1W+RnjtcKD7NI9W2ddYrFaEfk2GswO+WCq04kQhAMYo0nlnbShjKQT0c1pQQMFYtfMgZBNReVXbd+zmsXxYDw==" length="1695643"
+            type="application/octet-stream" />
+    </item>
     </channel>
 </rss>
