@@ -27,12 +27,20 @@ final class LaunchdService {
 
         let plist = buildPlist(task: task)
 
-        let data = try? PropertyListSerialization.data(
-            fromPropertyList: plist,
-            format: .xml,
-            options: 0
-        )
-        try? data?.write(to: URL(fileURLWithPath: path))
+        let data: Data?
+        do {
+            data = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
+        } catch {
+            print("[LaunchdService] Failed to serialize plist for \(label): \(error.localizedDescription)")
+            return
+        }
+        guard let plistData = data else { return }
+        do {
+            try plistData.write(to: URL(fileURLWithPath: path))
+        } catch {
+            print("[LaunchdService] Failed to write plist at \(path): \(error.localizedDescription)")
+            return
+        }
 
         load(plistPath: path)
     }
@@ -42,7 +50,11 @@ final class LaunchdService {
         let path = plistPath(for: task)
 
         unload(label: label)
-        try? FileManager.default.removeItem(atPath: path)
+        do {
+            try FileManager.default.removeItem(atPath: path)
+        } catch {
+            print("[LaunchdService] Failed to remove plist at \(path): \(error.localizedDescription)")
+        }
     }
 
     func uninstall(taskId: UUID) {
@@ -50,7 +62,11 @@ final class LaunchdService {
         let path = plistPath(for: taskId)
 
         unload(label: label)
-        try? FileManager.default.removeItem(atPath: path)
+        do {
+            try FileManager.default.removeItem(atPath: path)
+        } catch {
+            print("[LaunchdService] Failed to remove plist at \(path): \(error.localizedDescription)")
+        }
     }
 
     func syncAll(modelContext: ModelContext) {
@@ -63,9 +79,12 @@ final class LaunchdService {
                 let label = String(file.dropLast(6))
                 if !validLabels.contains(label) {
                     unload(label: label)
-                    try? FileManager.default.removeItem(
-                        atPath: (launchAgentsDir as NSString).appendingPathComponent(file)
-                    )
+                    let filePath = (launchAgentsDir as NSString).appendingPathComponent(file)
+                    do {
+                        try FileManager.default.removeItem(atPath: filePath)
+                    } catch {
+                        print("[LaunchdService] Failed to remove orphan plist \(file): \(error.localizedDescription)")
+                    }
                 }
             }
         }
@@ -186,7 +205,11 @@ final class LaunchdService {
 
     private func logPath(for task: ClaudeTask, stream: String) -> String {
         let logsDir = NSHomeDirectory() + "/Library/Logs/ClaudeCron"
-        try? FileManager.default.createDirectory(atPath: logsDir, withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(atPath: logsDir, withIntermediateDirectories: true)
+        } catch {
+            print("[LaunchdService] Failed to create logs directory: \(error.localizedDescription)")
+        }
         let label = plistLabel(for: task)
         return (logsDir as NSString).appendingPathComponent("\(label)-\(stream).log")
     }
@@ -196,7 +219,11 @@ final class LaunchdService {
     func triggerNow(task: ClaudeTask, modelContext: ModelContext, onDone: ((Int32) -> Void)? = nil) {
         let run = TaskRun(task: task)
         modelContext.insert(run)
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            print("[LaunchdService] Failed to save context after insert: \(error.localizedDescription)")
+        }
 
         run.log("Task: \(task.name) (id: \(task.compositeKey))")
         run.log("Prompt: \(task.prompt)")
@@ -253,11 +280,19 @@ final class LaunchdService {
                         run.formattedOutput = result
                     }
                 }
-                try? modelContext.save()
+                do {
+                    try modelContext.save()
+                } catch {
+                    print("[LaunchdService] Failed to save context on output: \(error.localizedDescription)")
+                }
             },
             onLog: { message in
                 run.log(message)
-                try? modelContext.save()
+                do {
+                    try modelContext.save()
+                } catch {
+                    print("[LaunchdService] Failed to save context on log: \(error.localizedDescription)")
+                }
             },
             onComplete: { exitCode, sessionId in
                 run.endedAt = Date()
@@ -268,7 +303,11 @@ final class LaunchdService {
                     run.sessionId = sid
                     task.sessionId = sid
                 }
-                try? modelContext.save()
+                do {
+                    try modelContext.save()
+                } catch {
+                    print("[LaunchdService] Failed to save context on complete: \(error.localizedDescription)")
+                }
 
                 if task.notifyOnEnd {
                     let status = exitCode == 0 ? "completed" : "failed"

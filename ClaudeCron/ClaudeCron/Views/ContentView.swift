@@ -36,7 +36,11 @@ struct ContentView: View {
                     onSave: { task in
                         if editingTask != nil {
                             // Editing existing task — save and reinstall
-                            try? modelContext.save()
+                            do {
+                                try modelContext.save()
+                            } catch {
+                                print("[ClaudeCron] Failed to save context on edit: \(error.localizedDescription)")
+                            }
                             LaunchdService.shared.install(task: task)
 
                             // If scope or taskId changed, remove from old location
@@ -44,7 +48,11 @@ struct ContentView: View {
                                && !editingOriginalFolder.isEmpty {
                                 var oldSettings = ConfigService.shared.read(folder: editingOriginalFolder)
                                 oldSettings.tasks.removeValue(forKey: editingOriginalTaskId)
-                                try? ConfigService.shared.write(oldSettings, to: editingOriginalFolder)
+                                do {
+                                    try ConfigService.shared.write(oldSettings, to: editingOriginalFolder)
+                                } catch {
+                                    print("[ClaudeCron] Failed to write config on task move: \(error.localizedDescription)")
+                                }
                             }
 
                             persistToJSON(task: task)
@@ -56,7 +64,11 @@ struct ContentView: View {
                                 folderRegistry.add(task.sourceFolder)
                             }
                             modelContext.insert(task)
-                            try? modelContext.save()
+                            do {
+                                try modelContext.save()
+                            } catch {
+                                print("[ClaudeCron] Failed to save context on insert: \(error.localizedDescription)")
+                            }
                             LaunchdService.shared.install(task: task)
                             persistToJSON(task: task)
                             selectedTask = task
@@ -107,7 +119,11 @@ struct ContentView: View {
         }
         .alert("Install Command Line Tool?", isPresented: $showingCLIPrompt) {
             Button("Install") {
-                try? CLIInstallService.install()
+                do {
+                    try CLIInstallService.install()
+                } catch {
+                    print("[ClaudeCron] Failed to install CLI tool: \(error.localizedDescription)")
+                }
                 cliPromptDismissed = true
             }
             Button("No Thanks", role: .cancel) {
@@ -135,7 +151,11 @@ struct ContentView: View {
         let isGlobal = folder == NSHomeDirectory()
         var settings = ConfigService.shared.read(folder: folder)
         settings.tasks[task.taskId] = task.toTaskDefinition(isGlobal: isGlobal)
-        try? ConfigService.shared.write(settings, to: folder)
+        do {
+            try ConfigService.shared.write(settings, to: folder)
+        } catch {
+            print("[ClaudeCron] Failed to persist task to JSON: \(error.localizedDescription)")
+        }
     }
 
     private func removeFromJSON(task: ClaudeTask) {
@@ -143,7 +163,11 @@ struct ContentView: View {
         guard !folder.isEmpty else { return }
         var settings = ConfigService.shared.read(folder: folder)
         settings.tasks.removeValue(forKey: task.taskId)
-        try? ConfigService.shared.write(settings, to: folder)
+        do {
+            try ConfigService.shared.write(settings, to: folder)
+        } catch {
+            print("[ClaudeCron] Failed to remove task from JSON: \(error.localizedDescription)")
+        }
     }
 
     private func resyncAll() {
@@ -163,7 +187,11 @@ struct ContentView: View {
                 modelContext.delete(task)
             }
         }
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            print("[ClaudeCron] Failed to save context on resync: \(error.localizedDescription)")
+        }
     }
 
     private func removeFolder(_ folder: String) {
@@ -179,7 +207,11 @@ struct ContentView: View {
                 modelContext.delete(task)
             }
         }
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            print("[ClaudeCron] Failed to save context on folder removal: \(error.localizedDescription)")
+        }
         folderRegistry.remove(folder)
         selectedTask = nil
     }
@@ -210,7 +242,11 @@ struct ContentView: View {
             }
         }
 
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            print("[ClaudeCron] Failed to save context on folder import: \(error.localizedDescription)")
+        }
 
         // Install launchd jobs for imported tasks
         let allDescriptor = FetchDescriptor<ClaudeTask>(

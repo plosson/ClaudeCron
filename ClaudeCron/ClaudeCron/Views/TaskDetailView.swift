@@ -136,7 +136,11 @@ struct TaskDetailView: View {
 
     private func toggleEnabled() {
         task.isEnabled.toggle()
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            print("[ClaudeCron] Failed to save context on toggle: \(error.localizedDescription)")
+        }
         LaunchdService.shared.install(task: task)
         persistToJSON()
     }
@@ -146,7 +150,11 @@ struct TaskDetailView: View {
         LaunchdService.shared.uninstall(task: taskToDelete)
         onDelete(taskToDelete)
         modelContext.delete(taskToDelete)
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            print("[ClaudeCron] Failed to save context on delete: \(error.localizedDescription)")
+        }
     }
 
     private func persistToJSON() {
@@ -155,7 +163,11 @@ struct TaskDetailView: View {
         let isGlobal = folder == NSHomeDirectory()
         var settings = ConfigService.shared.read(folder: folder)
         settings.tasks[task.taskId] = task.toTaskDefinition(isGlobal: isGlobal)
-        try? ConfigService.shared.write(settings, to: folder)
+        do {
+            try ConfigService.shared.write(settings, to: folder)
+        } catch {
+            print("[ClaudeCron] Failed to persist task to JSON: \(error.localizedDescription)")
+        }
     }
 }
 

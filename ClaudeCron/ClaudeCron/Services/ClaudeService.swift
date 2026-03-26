@@ -8,7 +8,7 @@ final class ClaudeService {
     private var runningProcesses: [UUID: Process] = [:]
 
     /// Find the claude CLI binary path
-    func claudePath() -> String? {
+    nonisolated func claudePath() -> String? {
         // Try `which` via login shell first
         let process = Process()
         let pipe = Pipe()
