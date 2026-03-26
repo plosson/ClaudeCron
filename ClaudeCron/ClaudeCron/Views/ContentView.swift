@@ -10,7 +10,7 @@ struct ContentView: View {
     @State private var editingTask: ClaudeTask?
     @State private var editingOriginalFolder: String = ""
     @State private var editingOriginalTaskId: String = ""
-    @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var showingCLIPrompt = false
     @AppStorage("cliPromptDismissed") private var cliPromptDismissed = false
     @Environment(\.modelContext) private var modelContext
