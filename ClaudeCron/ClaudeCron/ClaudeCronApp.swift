@@ -82,6 +82,26 @@ struct ClaudeCronApp: App {
             }
         }
         .modelContainer(Self.sharedContainer)
+        .commands {
+            CommandGroup(replacing: .help) {
+                Button("Check for Updates...") {
+                    updateService.checkForUpdates()
+                }
+                .disabled(!updateService.canCheckForUpdates)
+
+                Divider()
+
+                if CLIInstallService.isInstalled {
+                    Button("Uninstall Command Line Tool (ccron)") {
+                        try? CLIInstallService.uninstall()
+                    }
+                } else {
+                    Button("Install Command Line Tool (ccron)") {
+                        try? CLIInstallService.install()
+                    }
+                }
+            }
+        }
 
         MenuBarExtra("Claude Cron", image: "MenuBarIcon") {
             MenuBarView()

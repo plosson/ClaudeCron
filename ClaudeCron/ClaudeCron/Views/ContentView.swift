@@ -10,7 +10,7 @@ struct ContentView: View {
     @State private var editingTask: ClaudeTask?
     @State private var editingOriginalFolder: String = ""
     @State private var editingOriginalTaskId: String = ""
-    @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
     @State private var showingCLIPrompt = false
     @AppStorage("cliPromptDismissed") private var cliPromptDismissed = false
     @Environment(\.modelContext) private var modelContext
@@ -27,7 +27,7 @@ struct ContentView: View {
                 onRemoveFolder: removeFolder
             )
             .frame(minWidth: 220)
-        } content: {
+        } detail: {
             if showingSettings {
                 SettingsView(onClose: { showingSettings = false })
             } else if showingNewTask || editingTask != nil {
@@ -82,30 +82,27 @@ struct ContentView: View {
                 )
                 .frame(minWidth: 350)
             } else if let task = selectedTask {
-                TaskDetailView(task: task, selectedRun: $selectedRun, onEdit: { task in
-                    editingOriginalFolder = task.sourceFolder
-                    editingOriginalTaskId = task.taskId
-                    editingTask = task
-                }, onDelete: { task in
-                    removeFromJSON(task: task)
-                    selectedTask = nil
-                })
+                HSplitView {
+                    TaskDetailView(task: task, selectedRun: $selectedRun, onEdit: { task in
+                        editingOriginalFolder = task.sourceFolder
+                        editingOriginalTaskId = task.taskId
+                        editingTask = task
+                    }, onDelete: { task in
+                        removeFromJSON(task: task)
+                        selectedTask = nil
+                    })
                     .frame(minWidth: 300)
+
+                    if let run = selectedRun {
+                        RunDetailView(run: run)
+                            .frame(minWidth: 400)
+                    }
+                }
             } else {
                 ContentUnavailableView("Select a Task", systemImage: "clock.badge.questionmark")
             }
-        } detail: {
-            if let run = selectedRun {
-                RunDetailView(run: run)
-                    .frame(minWidth: 400)
-            } else {
-                Color.clear
-            }
         }
         .frame(minWidth: 900, minHeight: 500)
-        .onChange(of: selectedRun) { _, newValue in
-            columnVisibility = newValue != nil ? .all : .doubleColumn
-        }
         .onChange(of: selectedTask) { _, _ in
             selectedRun = nil
         }
