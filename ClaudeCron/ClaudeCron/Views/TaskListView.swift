@@ -10,6 +10,8 @@ struct TaskListView: View {
     var onResync: () -> Void
     var onRemoveFolder: (String) -> Void
 
+    @State private var folderToRemove: String?
+
     var tasksByFolder: [(String, [ClaudeTask])] {
         let grouped = Dictionary(grouping: tasks) { $0.sourceFolder }
         return grouped.sorted { $0.key < $1.key }
@@ -44,7 +46,7 @@ struct TaskListView: View {
                             Text(displayName(for: folder))
                             Spacer()
                             if folder != NSHomeDirectory() {
-                                Button(action: { onRemoveFolder(folder) }) {
+                                Button(action: { folderToRemove = folder }) {
                                     Image(systemName: "xmark.circle.fill")
                                         .font(.system(size: 11))
                                         .foregroundStyle(.tertiary)
@@ -55,6 +57,27 @@ struct TaskListView: View {
                         }
                     }
                 }
+            }
+        }
+        .alert("Remove Folder",
+               isPresented: Binding(
+                   get: { folderToRemove != nil },
+                   set: { if !$0 { folderToRemove = nil } }
+               )
+        ) {
+            Button("Remove", role: .destructive) {
+                if let folder = folderToRemove {
+                    onRemoveFolder(folder)
+                    folderToRemove = nil
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                folderToRemove = nil
+            }
+        } message: {
+            if let folder = folderToRemove {
+                let count = tasks.filter { $0.sourceFolder == folder }.count
+                Text("This will remove \(count) task\(count == 1 ? "" : "s") from \(displayName(for: folder)). The settings file on disk will not be modified.")
             }
         }
         .listStyle(.sidebar)

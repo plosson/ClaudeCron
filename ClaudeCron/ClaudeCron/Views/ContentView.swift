@@ -10,11 +10,14 @@ struct ContentView: View {
     @State private var editingTask: ClaudeTask?
     @State private var editingOriginalFolder: String = ""
     @State private var editingOriginalTaskId: String = ""
+    @State private var columnVisibility: NavigationSplitViewVisibility = .doubleColumn
+    @State private var showingCLIPrompt = false
+    @AppStorage("cliPromptDismissed") private var cliPromptDismissed = false
     @Environment(\.modelContext) private var modelContext
     @Environment(FolderRegistry.self) private var folderRegistry
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             TaskListView(
                 selectedTask: $selectedTask,
                 showingNewTask: $showingNewTask,
@@ -84,13 +87,34 @@ struct ContentView: View {
                 RunDetailView(run: run)
                     .frame(minWidth: 400)
             } else {
-                ContentUnavailableView("Select a Run", systemImage: "terminal")
+                Color.clear
             }
         }
         .frame(minWidth: 900, minHeight: 500)
+        .onChange(of: selectedRun) { _, newValue in
+            columnVisibility = newValue != nil ? .all : .doubleColumn
+        }
+        .onChange(of: selectedTask) { _, _ in
+            selectedRun = nil
+            columnVisibility = .doubleColumn
+        }
         .onAppear {
             UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
             resyncAll()
+            if !cliPromptDismissed && !CLIInstallService.isInstalled {
+                showingCLIPrompt = true
+            }
+        }
+        .alert("Install Command Line Tool?", isPresented: $showingCLIPrompt) {
+            Button("Install") {
+                try? CLIInstallService.install()
+                cliPromptDismissed = true
+            }
+            Button("No Thanks", role: .cancel) {
+                cliPromptDismissed = true
+            }
+        } message: {
+            Text("Would you like to install the ccron command line tool? This lets you run tasks from your terminal.")
         }
     }
 

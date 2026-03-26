@@ -36,6 +36,7 @@
 		CE368DE79EBDBF0BD1719810 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802D8AF02ADF5F375EA33F5D /* ContentView.swift */; };
 		CEB61DECCAA24F2E0480D93E /* FolderRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3209A3D4D0DE4E59CE9AFFB5 /* FolderRegistry.swift */; };
 		D23FD700BC6293E526BE91A6 /* TaskListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98F65076F11292D4A1545472 /* TaskListView.swift */; };
+		D78BD8D153C71EB44DC855E4 /* CLIInstallServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F12171DDC8B56573B540ABA7 /* CLIInstallServiceTests.swift */; };
 		EF1B7C95874B29406FBFC61F /* ComprehensiveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15DDC94366DAE6BDE2BC50C1 /* ComprehensiveTests.swift */; };
 		F4B3E4963B83F95D1F6F1DD0 /* LaunchdServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294469A88632E5C55A7FF457 /* LaunchdServiceTests.swift */; };
 		FE1731942F92D16E14F67103 /* TaskRunTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C986CB49FCDD04CBF3DD8CF /* TaskRunTests.swift */; };
@@ -85,6 +86,7 @@
 		D2643B28532C52212D024743 /* FolderRegistryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderRegistryTests.swift; sourceTree = "<group>"; };
 		EF980197A18DEF24F6DC3902 /* ClaudeTaskTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeTaskTests.swift; sourceTree = "<group>"; };
 		EFEA3A6F5DE56E686D5375EA /* TaskFormView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskFormView.swift; sourceTree = "<group>"; };
+		F12171DDC8B56573B540ABA7 /* CLIInstallServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLIInstallServiceTests.swift; sourceTree = "<group>"; };
 		F899884301F4867CD0480FF3 /* TaskDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskDefinition.swift; sourceTree = "<group>"; };
 		FD019193EE833858E20AB800 /* ScheduleType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleType.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -163,6 +165,7 @@
 			children = (
 				68BB63179E406FE40B33D92E /* ClaudeServiceTests.swift */,
 				EF980197A18DEF24F6DC3902 /* ClaudeTaskTests.swift */,
+				F12171DDC8B56573B540ABA7 /* CLIInstallServiceTests.swift */,
 				15DDC94366DAE6BDE2BC50C1 /* ComprehensiveTests.swift */,
 				6104F1BA6C5D565A6CCF884B /* ConfigIntegrationTests.swift */,
 				006BCADAB8856CB240F6A86F /* ConfigServiceTests.swift */,
@@ -307,6 +310,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D78BD8D153C71EB44DC855E4 /* CLIInstallServiceTests.swift in Sources */,
 				306600A8F2CA9CA7CFD6C156 /* ClaudeServiceTests.swift in Sources */,
 				74742489C67015D8128AAC85 /* ClaudeTaskTests.swift in Sources */,
 				EF1B7C95874B29406FBFC61F /* ComprehensiveTests.swift in Sources */,

@@ -1,50 +1,81 @@
 import Foundation
 
-enum CLIInstallService {
+struct CLIInstallService {
     static let cliName = "ccron"
-    static let symlinkPath = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent(".local/bin/\(cliName)").path
 
-    static var isInstalled: Bool {
-        let fm = FileManager.default
-        guard let dest = try? fm.destinationOfSymbolicLink(atPath: symlinkPath),
-              let execPath = Bundle.main.executablePath else { return false }
+    let homeDirectory: URL
+    let executablePath: String?
+    let fileManager: FileManager
+
+    var symlinkPath: String {
+        homeDirectory.appendingPathComponent(".local/bin/\(Self.cliName)").path
+    }
+
+    init(
+        homeDirectory: URL = FileManager.default.homeDirectoryForCurrentUser,
+        executablePath: String? = Bundle.main.executablePath,
+        fileManager: FileManager = .default
+    ) {
+        self.homeDirectory = homeDirectory
+        self.executablePath = executablePath
+        self.fileManager = fileManager
+    }
+
+    // MARK: - Static convenience (preserves existing call sites)
+
+    private static let _shared = CLIInstallService()
+
+    static var symlinkPath: String { _shared.symlinkPath }
+
+    static var isInstalled: Bool { _shared.isInstalled }
+
+    static func install() throws { try _shared.install() }
+
+    static func uninstall() throws { try _shared.uninstall() }
+
+    static func validateAppBundle(symlinkAt path: String) -> Bool {
+        _shared.validateAppBundle(symlinkAt: path)
+    }
+
+    static var manualInstallCommand: String { _shared.manualInstallCommand }
+
+    static var manualUninstallCommand: String { _shared.manualUninstallCommand }
+
+    // MARK: - Instance methods
+
+    var isInstalled: Bool {
+        guard let dest = try? fileManager.destinationOfSymbolicLink(atPath: symlinkPath),
+              let execPath = executablePath else { return false }
         return dest == execPath
     }
 
-    static func install() throws {
-        guard let execPath = Bundle.main.executablePath else {
+    func install() throws {
+        guard let execPath = executablePath else {
             throw CLIInstallError.noExecutablePath
         }
-        let fm = FileManager.default
-        let binDir = fm.homeDirectoryForCurrentUser.appendingPathComponent(".local/bin").path
-        if !fm.fileExists(atPath: binDir) {
-            try fm.createDirectory(atPath: binDir, withIntermediateDirectories: true)
+        let binDir = homeDirectory.appendingPathComponent(".local/bin").path
+        if !fileManager.fileExists(atPath: binDir) {
+            try fileManager.createDirectory(atPath: binDir, withIntermediateDirectories: true)
         }
-        try? fm.removeItem(atPath: symlinkPath)
-        try fm.createSymbolicLink(atPath: symlinkPath, withDestinationPath: execPath)
+        try? fileManager.removeItem(atPath: symlinkPath)
+        try fileManager.createSymbolicLink(atPath: symlinkPath, withDestinationPath: execPath)
         addToPathIfNeeded()
     }
 
-    private static func addToPathIfNeeded() {
-        let home = FileManager.default.homeDirectoryForCurrentUser
+    func addToPathIfNeeded() {
         let pathLine = "export PATH=\"$HOME/.local/bin:$PATH\""
 
-        // Check common shell config files
         let candidates: [(path: URL, exists: Bool)] = [
             ".zshrc", ".bashrc", ".bash_profile", ".profile"
-        ].map { (home.appendingPathComponent($0), FileManager.default.fileExists(atPath: home.appendingPathComponent($0).path)) }
+        ].map { (homeDirectory.appendingPathComponent($0), fileManager.fileExists(atPath: homeDirectory.appendingPathComponent($0).path)) }
 
-        // Pick the first existing file, defaulting to .zshrc
-        let target = candidates.first(where: { $0.exists })?.path ?? home.appendingPathComponent(".zshrc")
+        let target = candidates.first(where: { $0.exists })?.path ?? homeDirectory.appendingPathComponent(".zshrc")
 
-        // Check if already configured
         if let contents = try? String(contentsOf: target, encoding: .utf8),
            contents.contains(".local/bin") {
             return
         }
 
-        // Append the PATH export
         if let handle = try? FileHandle(forWritingTo: target) {
             handle.seekToEndOfFile()
             handle.write("\n# Added by Claude Cron\n\(pathLine)\n".data(using: .utf8)!)
@@ -54,27 +85,25 @@ enum CLIInstallService {
         }
     }
 
-    static func uninstall() throws {
-        try FileManager.default.removeItem(atPath: symlinkPath)
+    func uninstall() throws {
+        try fileManager.removeItem(atPath: symlinkPath)
     }
 
-    /// Returns true if the symlink target's .app bundle still exists on disk.
-    static func validateAppBundle(symlinkAt path: String) -> Bool {
-        let fm = FileManager.default
-        guard let resolved = try? fm.destinationOfSymbolicLink(atPath: path) else { return true }
+    func validateAppBundle(symlinkAt path: String) -> Bool {
+        guard let resolved = try? fileManager.destinationOfSymbolicLink(atPath: path) else { return true }
         let appPath = URL(fileURLWithPath: resolved)
             .deletingLastPathComponent()  // MacOS
             .deletingLastPathComponent()  // Contents
             .deletingLastPathComponent()  // .app
-        return fm.fileExists(atPath: appPath.path)
+        return fileManager.fileExists(atPath: appPath.path)
     }
 
-    static var manualInstallCommand: String {
-        guard let execPath = Bundle.main.executablePath else { return "" }
+    var manualInstallCommand: String {
+        guard let execPath = executablePath else { return "" }
         return "mkdir -p ~/.local/bin && ln -sf '\(execPath)' \(symlinkPath)"
     }
 
-    static var manualUninstallCommand: String {
+    var manualUninstallCommand: String {
         "rm \(symlinkPath)"
     }
 }
