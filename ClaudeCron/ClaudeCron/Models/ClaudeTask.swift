@@ -40,6 +40,7 @@ final class ClaudeTask {
     var sourceFolder: String = ""   // folder that owns this task's settings.json
     var taskId: String = ""         // string key in the tasks dict (e.g. "daily-cleanup")
     var promptFile: String = ""     // relative path to a prompt file (empty = inline prompt)
+    var taskDescription: String = "" // AI-generated summary of what the task does
 
     @Relationship(deleteRule: .cascade, inverse: \TaskRun.task)
     var runs: [TaskRun]

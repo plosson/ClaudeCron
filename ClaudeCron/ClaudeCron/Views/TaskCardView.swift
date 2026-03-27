@@ -68,6 +68,14 @@ struct TaskCardView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 4))
                 }
 
+                // Description
+                if !task.taskDescription.isEmpty {
+                    Text(task.taskDescription)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                }
+
                 // Sparkline (always reserve space for consistent card height)
                 SparklineView(runs: task.runs)
                     .opacity(task.runs.isEmpty ? 0 : 1)
@@ -88,6 +96,7 @@ struct TaskCardView: View {
             }
             .padding(12)
         }
+        .frame(height: 150, alignment: .topLeading)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(.ultraThinMaterial)

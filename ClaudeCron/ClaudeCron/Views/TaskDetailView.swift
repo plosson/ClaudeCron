@@ -11,6 +11,7 @@ struct TaskDetailView: View {
     @State private var promptText = ""
     @State private var promptFile = ""
     @State private var showAdvanced = false
+    @State private var statusMessage: String?
 
     enum PromptSource: String, CaseIterable {
         case inline = "Inline"
@@ -83,15 +84,43 @@ struct TaskDetailView: View {
 
             // Form
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    // Name + Directory
-                    VStack(alignment: .leading, spacing: 10) {
-                        FormField("Name") {
-                            TextField("Task name", text: $task.name)
-                                .textFieldStyle(.roundedBorder)
-                        }
+                VStack(spacing: 12) {
 
-                        FormField("Directory") {
+                    // ── 1. What ──
+                    FormSection("What", icon: "text.quote") {
+                        TextField("Task name", text: $task.name)
+                            .font(.title3.bold())
+                            .textFieldStyle(.plain)
+
+                        FormField("Description") {
+                            HStack(alignment: .top, spacing: 6) {
+                                TextEditor(text: $task.taskDescription)
+                                    .font(.body)
+                                    .frame(height: 50)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .strokeBorder(.secondary.opacity(0.2))
+                                    )
+                                Button(action: generateDescription) {
+                                    if statusMessage != nil {
+                                        ProgressView()
+                                            .controlSize(.small)
+                                    } else {
+                                        Image(systemName: "wand.and.stars")
+                                    }
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                                .disabled(statusMessage != nil)
+                                .help("Generate with AI")
+                            }
+                        }
+                    }
+
+                    // ── 2. Where & How ──
+                    FormSection("Where & How", icon: "terminal") {
+                        FormField("Working Directory") {
                             HStack(spacing: 6) {
                                 TextField("/path/to/project", text: $task.directory)
                                     .textFieldStyle(.roundedBorder)
@@ -103,6 +132,83 @@ struct TaskDetailView: View {
                             }
                         }
 
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Prompt")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Spacer()
+                                Picker("", selection: $promptSource) {
+                                    ForEach(PromptSource.allCases, id: \.self) { s in
+                                        Text(s.rawValue).tag(s)
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+                                .frame(width: 220)
+                            }
+
+                            switch promptSource {
+                            case .inline:
+                                TextEditor(text: $promptText)
+                                    .font(.system(.body, design: .monospaced))
+                                    .frame(minHeight: 80, maxHeight: 200)
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .strokeBorder(.secondary.opacity(0.2))
+                                    )
+                            case .file:
+                                HStack(spacing: 6) {
+                                    TextField("path/to/prompt.md", text: $promptFile)
+                                        .textFieldStyle(.roundedBorder)
+                                    Button(action: browsePromptFile) {
+                                        Image(systemName: "doc")
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
+                                }
+                                if !promptFile.isEmpty && !task.directory.isEmpty {
+                                    let fullPath = URL(fileURLWithPath: task.directory).appendingPathComponent(promptFile).path
+                                    HStack(spacing: 4) {
+                                        Image(systemName: FileManager.default.fileExists(atPath: fullPath) ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                                            .font(.caption)
+                                        Text(FileManager.default.fileExists(atPath: fullPath) ? "File found" : "File not found")
+                                            .font(.caption)
+                                    }
+                                    .foregroundStyle(FileManager.default.fileExists(atPath: fullPath) ? .green : .red)
+                                }
+                            case .command:
+                                TextField("e.g., /summarize", text: $promptText)
+                                    .textFieldStyle(.roundedBorder)
+                            }
+                        }
+                    }
+
+                    // ── 3. When ──
+                    FormSection("Schedule", icon: "calendar.badge.clock") {
+                        Picker("", selection: scheduleBinding.type) {
+                            ForEach(ScheduleType.allCases, id: \.self) { t in
+                                Text(t.rawValue).tag(t)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+
+                        if [.daily, .weekly, .monthly].contains(task.schedule.type) {
+                            DatePicker("Time", selection: scheduleBinding.time, displayedComponents: .hourAndMinute)
+                        }
+
+                        if task.schedule.type == .weekly {
+                            WeekdayPicker(selection: scheduleBinding.weekdays)
+                        }
+
+                        if task.schedule.type == .interval {
+                            Stepper("Every \(task.schedule.intervalMinutes) min",
+                                    value: scheduleBinding.intervalMinutes, in: 1...1440, step: 15)
+                        }
+                    }
+
+                    // ── 4. Settings ──
+                    FormSection("Settings", icon: "gearshape") {
                         HStack(spacing: 16) {
                             FormField("Model") {
                                 Picker("", selection: $task.model) {
@@ -123,153 +229,75 @@ struct TaskDetailView: View {
                                 .labelsHidden()
                             }
                         }
-                    }
 
-                    Divider()
-
-                    // Prompt
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Prompt")
-                                .font(.subheadline.bold())
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Picker("", selection: $promptSource) {
-                                ForEach(PromptSource.allCases, id: \.self) { s in
-                                    Text(s.rawValue).tag(s)
-                                }
-                            }
-                            .pickerStyle(.segmented)
-                            .frame(width: 220)
-                        }
-
-                        switch promptSource {
-                        case .inline:
-                            TextEditor(text: $promptText)
-                                .font(.system(.body, design: .monospaced))
-                                .frame(minHeight: 80, maxHeight: 200)
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .strokeBorder(.secondary.opacity(0.2))
-                                )
-                        case .file:
-                            HStack(spacing: 6) {
-                                TextField("path/to/prompt.md", text: $promptFile)
-                                    .textFieldStyle(.roundedBorder)
-                                Button(action: browsePromptFile) {
-                                    Image(systemName: "doc")
-                                }
-                                .buttonStyle(.bordered)
-                                .controlSize(.small)
-                            }
-                            if !promptFile.isEmpty && !task.directory.isEmpty {
-                                let fullPath = URL(fileURLWithPath: task.directory).appendingPathComponent(promptFile).path
-                                HStack(spacing: 4) {
-                                    Image(systemName: FileManager.default.fileExists(atPath: fullPath) ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                                        .font(.caption)
-                                    Text(FileManager.default.fileExists(atPath: fullPath) ? "File found" : "File not found")
-                                        .font(.caption)
-                                }
-                                .foregroundStyle(FileManager.default.fileExists(atPath: fullPath) ? .green : .red)
-                            }
-                        case .command:
-                            TextField("e.g., /summarize", text: $promptText)
-                                .textFieldStyle(.roundedBorder)
-                        }
-                    }
-
-                    Divider()
-
-                    // Schedule + Notifications side by side
-                    HStack(alignment: .top, spacing: 24) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Schedule")
-                                .font(.subheadline.bold())
-                                .foregroundStyle(.secondary)
-
-                            Picker("", selection: scheduleBinding.type) {
-                                ForEach(ScheduleType.allCases, id: \.self) { t in
-                                    Text(t.rawValue).tag(t)
-                                }
-                            }
-                            .labelsHidden()
-
-                            if [.daily, .weekly, .monthly].contains(task.schedule.type) {
-                                DatePicker("At", selection: scheduleBinding.time, displayedComponents: .hourAndMinute)
-                                    .labelsHidden()
-                            }
-
-                            if task.schedule.type == .weekly {
-                                WeekdayPicker(selection: scheduleBinding.weekdays)
-                            }
-
-                            if task.schedule.type == .interval {
-                                Stepper("Every \(task.schedule.intervalMinutes) min",
-                                        value: scheduleBinding.intervalMinutes, in: 1...1440, step: 15)
-                                    .font(.caption)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Notifications")
-                                .font(.subheadline.bold())
-                                .foregroundStyle(.secondary)
-
-                            Toggle("On start", isOn: $task.notifyOnStart)
+                        HStack(spacing: 16) {
+                            Toggle("Notify on start", isOn: $task.notifyOnStart)
                                 .toggleStyle(.checkbox)
-                            Toggle("On completion", isOn: $task.notifyOnEnd)
+                            Toggle("Notify on completion", isOn: $task.notifyOnEnd)
                                 .toggleStyle(.checkbox)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    }
 
-                    // Advanced
-                    DisclosureGroup(isExpanded: $showAdvanced) {
-                        VStack(alignment: .leading, spacing: 10) {
-                            HStack(spacing: 16) {
-                                FormField("Session") {
-                                    Picker("", selection: Binding(
-                                        get: { SessionMode(rawValue: task.sessionMode) ?? .new },
-                                        set: { task.sessionMode = $0.rawValue }
-                                    )) {
-                                        ForEach(SessionMode.allCases, id: \.self) { m in
-                                            Text(m.rawValue).tag(m)
+                        DisclosureGroup(isExpanded: $showAdvanced) {
+                            VStack(alignment: .leading, spacing: 10) {
+                                HStack(spacing: 16) {
+                                    FormField("Session") {
+                                        Picker("", selection: Binding(
+                                            get: { SessionMode(rawValue: task.sessionMode) ?? .new },
+                                            set: { task.sessionMode = $0.rawValue }
+                                        )) {
+                                            ForEach(SessionMode.allCases, id: \.self) { m in
+                                                Text(m.rawValue).tag(m)
+                                            }
+                                        }
+                                        .labelsHidden()
+                                    }
+
+                                    if task.sessionMode != SessionMode.new.rawValue {
+                                        FormField("Session ID") {
+                                            TextField("", text: Binding(
+                                                get: { task.sessionId ?? "" },
+                                                set: { task.sessionId = $0.isEmpty ? nil : $0 }
+                                            ))
+                                            .textFieldStyle(.roundedBorder)
                                         }
                                     }
-                                    .labelsHidden()
                                 }
 
-                                if task.sessionMode != SessionMode.new.rawValue {
-                                    FormField("Session ID") {
-                                        TextField("", text: Binding(
-                                            get: { task.sessionId ?? "" },
-                                            set: { task.sessionId = $0.isEmpty ? nil : $0 }
-                                        ))
+                                FormField("Allowed Tools") {
+                                    TextField("comma-separated", text: $task.allowedTools)
                                         .textFieldStyle(.roundedBorder)
-                                    }
+                                }
+
+                                FormField("Disallowed Tools") {
+                                    TextField("comma-separated", text: $task.disallowedTools)
+                                        .textFieldStyle(.roundedBorder)
                                 }
                             }
-
-                            FormField("Allowed Tools") {
-                                TextField("comma-separated", text: $task.allowedTools)
-                                    .textFieldStyle(.roundedBorder)
-                            }
-
-                            FormField("Disallowed Tools") {
-                                TextField("comma-separated", text: $task.disallowedTools)
-                                    .textFieldStyle(.roundedBorder)
-                            }
+                            .padding(.top, 8)
+                        } label: {
+                            Text("Advanced")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
-                        .padding(.top, 8)
-                    } label: {
-                        Text("Advanced")
-                            .font(.subheadline.bold())
-                            .foregroundStyle(.secondary)
                     }
                 }
-                .padding(16)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 12)
+            }
+
+            // Status bar
+            if let statusMessage {
+                Divider()
+                HStack(spacing: 6) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(statusMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 6)
             }
         }
         .onAppear { loadPromptState() }
@@ -284,6 +312,33 @@ struct TaskDetailView: View {
             promptSource = .command
         } else {
             promptSource = .inline
+        }
+    }
+
+    private func generateDescription() {
+        // Use the current prompt text, not the saved one
+        let prompt: String
+        switch promptSource {
+        case .inline, .command: prompt = promptText
+        case .file:
+            if !promptFile.isEmpty && !task.directory.isEmpty {
+                let url = URL(fileURLWithPath: task.directory).appendingPathComponent(promptFile)
+                prompt = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
+            } else {
+                prompt = ""
+            }
+        }
+        guard !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              ClaudeService.shared.claudePath() != nil else { return }
+
+        statusMessage = "Generating description..."
+        ClaudeService.shared.summarizePrompt(prompt) { summary in
+            Task { @MainActor in
+                if let summary {
+                    task.taskDescription = summary
+                }
+                statusMessage = nil
+            }
         }
     }
 
@@ -302,6 +357,7 @@ struct TaskDetailView: View {
         }
         LaunchdService.shared.install(task: task)
         persistToJSON()
+
     }
 
     private func toggleEnabled() {
@@ -366,6 +422,47 @@ struct TaskDetailView: View {
             }
             promptFile = url.path
         }
+    }
+}
+
+// MARK: - Section header
+
+struct FormSection<Content: View>: View {
+    let title: String
+    let icon: String
+    @ViewBuilder let content: Content
+
+    init(_ title: String, icon: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.icon = icon
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.caption)
+                    .foregroundStyle(Color.accentColor)
+                Text(title.uppercased())
+                    .font(.caption.bold())
+                    .tracking(0.5)
+                    .foregroundStyle(.secondary)
+            }
+
+            content
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(.background)
+                .shadow(color: .black.opacity(0.05), radius: 2, y: 1)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .strokeBorder(.secondary.opacity(0.12))
+        )
     }
 }
 

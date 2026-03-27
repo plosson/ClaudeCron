@@ -151,6 +151,41 @@ final class ClaudeService {
         }
     }
 
+    /// Generate a short description of what a prompt does, using Haiku
+    nonisolated func summarizePrompt(_ prompt: String, completion: @escaping @Sendable (String?) -> Void) {
+        guard !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              let claudeBin = claudePath() else {
+            completion(nil)
+            return
+        }
+
+        DispatchQueue.global(qos: .utility).async {
+            let process = Process()
+            let pipe = Pipe()
+            process.executableURL = URL(fileURLWithPath: claudeBin)
+            process.arguments = [
+                "--print", "--model", "haiku", "--max-turns", "1",
+                "Describe in one short sentence (max 15 words) what this Claude task prompt does. Output ONLY the description, no quotes or preamble:\n\n\(prompt)"
+            ]
+            var env = Self.shellEnvironment
+            env.removeValue(forKey: "CLAUDECODE")
+            process.environment = env
+            process.standardOutput = pipe
+            process.standardError = FileHandle.nullDevice
+
+            do {
+                try process.run()
+                process.waitUntilExit()
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                let result = String(data: data, encoding: .utf8)?
+                    .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                completion(result.isEmpty ? nil : result)
+            } catch {
+                completion(nil)
+            }
+        }
+    }
+
     func cancelRun(_ id: UUID) {
         runningProcesses[id]?.terminate()
         runningProcesses.removeValue(forKey: id)

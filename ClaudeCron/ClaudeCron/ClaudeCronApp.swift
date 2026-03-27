@@ -78,7 +78,10 @@ struct ClaudeCronApp: App {
                 ContentView()
                     .environment(folderRegistry)
                     .environment(updateService)
-                    .onAppear { updateService.startUpdater() }
+                    .onAppear {
+                        updateService.startUpdater()
+                        cleanupStaleRuns()
+                    }
             }
         }
         .modelContainer(Self.sharedContainer)
@@ -116,6 +119,23 @@ struct ClaudeCronApp: App {
                 .environment(folderRegistry)
                 .environment(updateService)
         }
+    }
+
+    /// Mark any "Running" TaskRuns as failed on startup — they are stale from a previous crash/quit
+    private func cleanupStaleRuns() {
+        let context = Self.sharedContainer.mainContext
+        let runningStatus = RunStatus.running.rawValue
+        let descriptor = FetchDescriptor<TaskRun>(
+            predicate: #Predicate { $0.status == runningStatus }
+        )
+        guard let staleRuns = try? context.fetch(descriptor), !staleRuns.isEmpty else { return }
+        for run in staleRuns {
+            run.runStatus = .failed
+            run.endedAt = Date()
+            run.log("Marked as failed — app was restarted while task was running")
+        }
+        try? context.save()
+        print("[ClaudeCron] Cleaned up \(staleRuns.count) stale running task(s)")
     }
 
     private func printCLIHelp() {
