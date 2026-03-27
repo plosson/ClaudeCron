@@ -103,6 +103,13 @@ struct ClaudeCronApp: App {
             }
         }
 
+        Settings {
+            SettingsView()
+                .modelContainer(Self.sharedContainer)
+                .environment(updateService)
+                .frame(minWidth: 420, minHeight: 350)
+        }
+
         MenuBarExtra("Claude Cron", image: "MenuBarIcon") {
             MenuBarView()
                 .modelContainer(Self.sharedContainer)

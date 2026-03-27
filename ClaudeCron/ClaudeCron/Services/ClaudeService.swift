@@ -7,28 +7,56 @@ final class ClaudeService {
 
     private var runningProcesses: [UUID: Process] = [:]
 
-    /// Find the claude CLI binary path
-    nonisolated func claudePath() -> String? {
-        // Try `which` via login shell first
+    /// Cached login shell environment (resolved once)
+    nonisolated static let shellEnvironment: [String: String] = {
         let process = Process()
         let pipe = Pipe()
         process.executableURL = URL(fileURLWithPath: "/bin/zsh")
-        process.arguments = ["-l", "-c", "which claude"]
+        process.arguments = ["-l", "-c", "env"]
         process.standardOutput = pipe
         process.standardError = FileHandle.nullDevice
         try? process.run()
         process.waitUntilExit()
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        let path = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let path, !path.isEmpty { return path }
+        let output = String(data: data, encoding: .utf8) ?? ""
+        var env: [String: String] = [:]
+        for line in output.components(separatedBy: "\n") {
+            guard let eqIdx = line.firstIndex(of: "=") else { continue }
+            let key = String(line[line.startIndex..<eqIdx])
+            let value = String(line[line.index(after: eqIdx)...])
+            env[key] = value
+        }
+        // Ensure we at least have the current process env as fallback
+        if env["PATH"] == nil {
+            env = ProcessInfo.processInfo.environment
+        }
+        return env
+    }()
 
-        // Fallback: check common install locations
-        let candidates = [
-            NSHomeDirectory() + "/.local/bin/claude",
-            "/usr/local/bin/claude",
-            "/opt/homebrew/bin/claude",
-        ]
-        return candidates.first { FileManager.default.isExecutableFile(atPath: $0) }
+    /// Find the claude CLI binary path (user override, then auto-detect)
+    nonisolated func claudePath() -> String? {
+        // Check for user override first
+        let override = UserDefaults.standard.string(forKey: "claudeExecutablePath") ?? ""
+        if !override.isEmpty {
+            let expanded = NSString(string: override).expandingTildeInPath
+            if FileManager.default.isExecutableFile(atPath: expanded) {
+                return expanded
+            }
+        }
+        return autoDetectClaudePath()
+    }
+
+    /// Auto-detect claude binary using the cached shell PATH
+    nonisolated func autoDetectClaudePath() -> String? {
+        let shellPath = Self.shellEnvironment["PATH"] ?? ""
+        let dirs = shellPath.components(separatedBy: ":")
+        for dir in dirs {
+            let candidate = (dir as NSString).appendingPathComponent("claude")
+            if FileManager.default.isExecutableFile(atPath: candidate) {
+                return candidate
+            }
+        }
+        return nil
     }
 
     /// Run a Claude task and stream output
@@ -63,8 +91,8 @@ final class ClaudeService {
         // Run claude directly — no shell wrapping, avoids quoting issues
         process.executableURL = URL(fileURLWithPath: claudeBin)
 
-        // Remove CLAUDECODE env var to allow nested invocation
-        var env = ProcessInfo.processInfo.environment
+        // Use the user's login shell environment
+        var env = Self.shellEnvironment
         env.removeValue(forKey: "CLAUDECODE")
         process.environment = env
 

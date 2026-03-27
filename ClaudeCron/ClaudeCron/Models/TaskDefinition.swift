@@ -10,6 +10,7 @@ struct TaskDefinition: Codable {
     var name: String
     var prompt: String
     var path: String?                   // Required for global tasks, nil for project-local
+    var promptFile: String?             // Relative path to a prompt file (nil = inline prompt)
     var model: String = "sonnet"
     var permissionMode: String = "default"
     var schedule: ScheduleDefinition = ScheduleDefinition(type: "Manual")
@@ -46,6 +47,7 @@ struct TaskDefinition: Codable {
         name = try container.decode(String.self, forKey: .name)
         prompt = try container.decode(String.self, forKey: .prompt)
         path = try container.decodeIfPresent(String.self, forKey: .path)
+        promptFile = try container.decodeIfPresent(String.self, forKey: .promptFile)
         model = try container.decodeIfPresent(String.self, forKey: .model) ?? "sonnet"
         permissionMode = try container.decodeIfPresent(String.self, forKey: .permissionMode) ?? "default"
         schedule = try container.decodeIfPresent(ScheduleDefinition.self, forKey: .schedule) ?? ScheduleDefinition(type: "Manual")

@@ -39,6 +39,7 @@ final class ClaudeTask {
     var createdAt: Date
     var sourceFolder: String = ""   // folder that owns this task's settings.json
     var taskId: String = ""         // string key in the tasks dict (e.g. "daily-cleanup")
+    var promptFile: String = ""     // relative path to a prompt file (empty = inline prompt)
 
     @Relationship(deleteRule: .cascade, inverse: \TaskRun.task)
     var runs: [TaskRun]
@@ -84,6 +85,13 @@ final class ClaudeTask {
         self.runs = []
     }
 
+    /// Resolve the effective prompt — reads from file if promptFile is set
+    var resolvedPrompt: String {
+        guard !promptFile.isEmpty else { return prompt }
+        let url = URL(fileURLWithPath: directory).appendingPathComponent(promptFile)
+        return (try? String(contentsOf: url, encoding: .utf8)) ?? prompt
+    }
+
     /// Unique identity across all settings files
     var compositeKey: String {
         "\(sourceFolder)::\(taskId)"
@@ -95,6 +103,9 @@ final class ClaudeTask {
         var def = TaskDefinition(name: name, prompt: prompt)
         if isGlobal {
             def.path = directory
+        }
+        if !promptFile.isEmpty {
+            def.promptFile = promptFile
         }
         def.model = model
         def.permissionMode = permissionMode
@@ -128,5 +139,6 @@ final class ClaudeTask {
         disallowedTools = def.disallowedTools.joined(separator: ",")
         notifyOnStart = def.notifyOnStart
         notifyOnEnd = def.notifyOnEnd
+        promptFile = def.promptFile ?? ""
     }
 }

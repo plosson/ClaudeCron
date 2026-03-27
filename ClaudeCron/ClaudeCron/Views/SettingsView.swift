@@ -5,78 +5,67 @@ struct SettingsView: View {
     @AppStorage("defaultWorkingDirectory") private var defaultWorkingDirectory = "~/Projects"
     @AppStorage("defaultModel") private var defaultModel = "sonnet"
     @AppStorage("autoScrollLogs") private var autoScrollLogs = true
+    @AppStorage("claudeExecutablePath") private var claudeExecutablePath = ""
     @Environment(UpdateService.self) private var updateService
+    @State private var detectedPath: String?
 
-    var onClose: () -> Void
+    var onClose: (() -> Void)?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text("Settings")
-                    .font(.title2.bold())
-                Spacer()
-                Button(action: onClose) {
-                    Image(systemName: "xmark")
+        Form {
+            Section("General") {
+                Toggle("24-hour time format", isOn: $use24HourFormat)
+
+                Picker("Default model", selection: $defaultModel) {
+                    Text("Opus").tag("opus")
+                    Text("Sonnet").tag("sonnet")
+                    Text("Haiku").tag("haiku")
                 }
-                .buttonStyle(.plain)
+
+                Toggle("Auto-scroll logs", isOn: $autoScrollLogs)
             }
-            .padding()
 
-            Divider()
+            Section("Updates") {
+                Toggle("Automatically check for updates", isOn: Binding(
+                    get: { updateService.automaticallyChecksForUpdates },
+                    set: { updateService.automaticallyChecksForUpdates = $0 }
+                ))
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    GroupBox {
-                        Toggle("24-Hour Time Format", isOn: $use24HourFormat)
-                        Text("Use 24-hour format (14:30) instead of 12-hour (2:30 PM)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+                Button("Check for Updates Now") {
+                    updateService.checkForUpdates()
+                }
+                .disabled(!updateService.canCheckForUpdates)
+            }
 
-                    GroupBox("Updates") {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Toggle("Automatically check for updates", isOn: Binding(
-                                get: { updateService.automaticallyChecksForUpdates },
-                                set: { updateService.automaticallyChecksForUpdates = $0 }
-                            ))
+            Section("Advanced") {
+                TextField("Default working directory", text: $defaultWorkingDirectory)
 
-                            Button("Check for Updates Now") {
-                                updateService.checkForUpdates()
-                            }
-                            .disabled(!updateService.canCheckForUpdates)
+                HStack {
+                    TextField("Claude executable path", text: $claudeExecutablePath, prompt: Text(detectedPath ?? "Auto-detect"))
+                    if !claudeExecutablePath.isEmpty {
+                        Button(action: { claudeExecutablePath = "" }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
                         }
-                    }
-
-                    GroupBox("Advanced") {
-                        VStack(alignment: .leading, spacing: 12) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Default Working Directory").font(.subheadline.bold())
-                                TextField("~/Projects", text: $defaultWorkingDirectory)
-                                    .textFieldStyle(.roundedBorder)
-                            }
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Default Model").font(.subheadline.bold())
-                                Picker("", selection: $defaultModel) {
-                                    Text("Opus").tag("opus")
-                                    Text("Sonnet").tag("sonnet")
-                                    Text("Haiku").tag("haiku")
-                                }
-                            }
-
-                            Toggle(isOn: $autoScrollLogs) {
-                                VStack(alignment: .leading) {
-                                    Text("Auto-scroll Logs")
-                                    Text("Automatically scroll to bottom of logs during live viewing")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                        }
+                        .buttonStyle(.plain)
+                        .help("Clear to use auto-detection")
                     }
                 }
-                .padding()
+                if claudeExecutablePath.isEmpty, let detected = detectedPath {
+                    Text("Detected: \(detected)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else if claudeExecutablePath.isEmpty {
+                    Text("Auto-detection active")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
+        }
+        .formStyle(.grouped)
+        .frame(width: 480, height: 420)
+        .onAppear {
+            detectedPath = ClaudeService.shared.autoDetectClaudePath()
         }
     }
 }

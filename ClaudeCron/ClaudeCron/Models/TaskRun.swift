@@ -21,6 +21,8 @@ final class TaskRun {
     var exitCode: Int?
     var sessionId: String?
 
+    @Transient var processId: UUID?
+
     var runStatus: RunStatus {
         get { RunStatus(rawValue: status) ?? .failed }
         set { status = newValue.rawValue }

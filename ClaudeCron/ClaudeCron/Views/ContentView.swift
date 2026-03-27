@@ -6,10 +6,6 @@ struct ContentView: View {
     @Query(sort: \ClaudeTask.createdAt, order: .reverse) private var tasks: [ClaudeTask]
     @State private var selectedTask: ClaudeTask?
     @State private var showingNewTask = false
-    @State private var showingSettings = false
-    @State private var editingTask: ClaudeTask?
-    @State private var editingOriginalFolder: String = ""
-    @State private var editingOriginalTaskId: String = ""
     @State private var showingCLIPrompt = false
     @AppStorage("cliPromptDismissed") private var cliPromptDismissed = false
     @Environment(\.modelContext) private var modelContext
@@ -37,150 +33,198 @@ struct ContentView: View {
         GridItem(.adaptive(minimum: 280), spacing: 16)
     ]
 
-    var body: some View {
-        VStack(spacing: 0) {
-            // Top bar
-            HStack(spacing: 12) {
-                Text("Claude Cron")
-                    .font(.title2.bold())
+    @State private var showRuns = false
 
-                Spacer()
+    private struct TaskGroup {
+        let folder: String
+        let displayName: String
+        let tasks: [ClaudeTask]
+    }
 
-                // Aggregate status pills
-                HStack(spacing: 8) {
-                    StatusPill(count: okCount, label: "OK", color: .green)
-                    StatusPill(count: runningCount, label: "Running", color: .blue)
-                    StatusPill(count: failedCount, label: "Failed", color: .red)
+    private var groupedTasks: [TaskGroup] {
+        let grouped = Dictionary(grouping: tasks) { $0.sourceFolder }
+        return grouped.keys.sorted().map { folder in
+            let name: String
+            if folder == NSHomeDirectory() {
+                name = "Global"
+            } else {
+                name = (folder as NSString).lastPathComponent
+            }
+            return TaskGroup(folder: folder, displayName: name, tasks: grouped[folder]!)
+        }
+    }
+
+    @ViewBuilder
+    private func taskCard(for task: ClaudeTask) -> some View {
+        TaskCardView(task: task)
+            .onTapGesture {
+                        showRuns = !task.runs.isEmpty
+                        selectedTask = task
+                    }
+            .contextMenu {
+                Button("Run Now") {
+                    LaunchdService.shared.triggerNow(task: task, modelContext: modelContext)
                 }
-
-                Spacer()
-
-                Button(action: { showingSettings = true }) {
-                    Image(systemName: "gear")
-                }
-                .help("Settings")
-
-                Menu {
-                    Button(action: { showingNewTask = true }) {
-                        Label("New Task", systemImage: "doc.badge.plus")
-                    }
-                    .keyboardShortcut("n", modifiers: .command)
-                    Button(action: addFolder) {
-                        Label("Add Folder", systemImage: "folder.badge.plus")
-                    }
-                    Button(action: resyncAll) {
-                        Label("Resync Folders", systemImage: "arrow.clockwise")
-                    }
-                } label: {
-                    Image(systemName: "plus")
+                .disabled(task.runs.contains { $0.runStatus == .running })
+                Divider()
+                Button("Delete", role: .destructive) {
+                    removeFromJSON(task: task)
+                    LaunchdService.shared.uninstall(task: task)
+                    modelContext.delete(task)
+                    try? modelContext.save()
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+    }
 
-            Divider()
+    var body: some View {
+        VStack(spacing: 0) {
+            if let task = selectedTask {
+                // DETAIL VIEW — full screen drill-down
+                VStack(spacing: 0) {
+                    // Back bar
+                    HStack(spacing: 8) {
+                        Button(action: {
+                            selectedTask = nil
+                            showRuns = false
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "chevron.left")
+                                Text("Tasks")
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(Color.accentColor)
 
-            // Main grid
-            if tasks.isEmpty {
-                ContentUnavailableView("No Tasks", systemImage: "clock.badge.questionmark", description: Text("Click + to create a new task or add a folder."))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                ScrollView {
-                    LazyVGrid(columns: gridColumns, spacing: 16) {
-                        ForEach(tasks) { task in
-                            TaskCardView(task: task)
-                                .onTapGesture { selectedTask = task }
-                                .contextMenu {
-                                    Button("Run Now") {
-                                        LaunchdService.shared.triggerNow(task: task, modelContext: modelContext)
-                                    }
-                                    .disabled(task.runs.contains { $0.runStatus == .running })
-                                    Button("Edit") {
-                                        editingOriginalFolder = task.sourceFolder
-                                        editingOriginalTaskId = task.taskId
-                                        editingTask = task
-                                    }
-                                    Divider()
-                                    Button("Delete", role: .destructive) {
-                                        removeFromJSON(task: task)
-                                        LaunchdService.shared.uninstall(task: task)
-                                        modelContext.delete(task)
-                                        try? modelContext.save()
-                                    }
+                        Spacer()
+
+                        Text(task.name)
+                            .font(.headline)
+
+                        Spacer()
+
+                        Color.clear.frame(width: 60, height: 1)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+
+                    Divider()
+
+                    if showRuns {
+                        HSplitView {
+                            TaskDetailView(
+                                task: task,
+                                showRuns: $showRuns,
+                                onDelete: { t in
+                                    removeFromJSON(task: t)
+                                    selectedTask = nil
                                 }
+                            )
+                            .frame(minWidth: 250, idealWidth: 350)
+
+                            RunDetailView(task: task, showRuns: $showRuns)
+                                .frame(minWidth: 400)
+                        }
+                    } else {
+                        TaskDetailView(
+                            task: task,
+                            showRuns: $showRuns,
+                            onDelete: { t in
+                                removeFromJSON(task: t)
+                                selectedTask = nil
+                            }
+                        )
+                    }
+                }
+                .onChange(of: selectedTask) { _, newTask in
+                    showRuns = !(newTask?.runs.isEmpty ?? true)
+                }
+            } else {
+                // HOME VIEW — full-width card grid
+                VStack(spacing: 0) {
+                    // Top bar
+                    HStack(spacing: 12) {
+                        Text("Claude Cron")
+                            .font(.title2.bold())
+
+                        Spacer()
+
+                        HStack(spacing: 8) {
+                            StatusPill(count: okCount, label: "OK", color: .green)
+                            StatusPill(count: runningCount, label: "Running", color: .blue)
+                            StatusPill(count: failedCount, label: "Failed", color: .red)
+                        }
+
+                        Spacer()
+
+                        SettingsLink {
+                            Image(systemName: "gear")
+                        }
+                        .help("Settings")
+
+                        Menu {
+                            Button(action: { showingNewTask = true }) {
+                                Label("New Task", systemImage: "doc.badge.plus")
+                            }
+                            .keyboardShortcut("n", modifiers: .command)
+                            Button(action: addFolder) {
+                                Label("Add Folder", systemImage: "folder.badge.plus")
+                            }
+                            Button(action: resyncAll) {
+                                Label("Resync Folders", systemImage: "arrow.clockwise")
+                            }
+                        } label: {
+                            Image(systemName: "plus")
                         }
                     }
-                    .padding(20)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
+
+                    Divider()
+
+                    if tasks.isEmpty {
+                        ContentUnavailableView("No Tasks", systemImage: "clock.badge.questionmark", description: Text("Click + to create a new task or add a folder."))
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 24) {
+                                ForEach(groupedTasks, id: \.folder) { group in
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text(group.displayName)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .textCase(.uppercase)
+
+                                        LazyVGrid(columns: gridColumns, spacing: 16) {
+                                            ForEach(group.tasks) { task in
+                                                taskCard(for: task)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(20)
+                        }
+                    }
                 }
             }
         }
         .frame(minWidth: 700, minHeight: 460)
-        // Task detail sheet
-        .sheet(item: $selectedTask) { task in
-            TaskDetailSheet(
-                task: task,
-                onEdit: { t in
-                    selectedTask = nil
-                    editingOriginalFolder = t.sourceFolder
-                    editingOriginalTaskId = t.taskId
-                    editingTask = t
-                },
-                onDelete: { t in
-                    removeFromJSON(task: t)
-                    selectedTask = nil
-                }
-            )
-            .frame(minWidth: 550, minHeight: 500)
-        }
-        // Settings sheet
-        .sheet(isPresented: $showingSettings) {
-            SettingsView(onClose: { showingSettings = false })
-                .frame(minWidth: 420, minHeight: 350)
-        }
-        // New / Edit task sheet
-        .sheet(isPresented: Binding(
-            get: { showingNewTask || editingTask != nil },
-            set: { if !$0 { showingNewTask = false; editingTask = nil } }
-        )) {
+        // New task sheet
+        .sheet(isPresented: $showingNewTask) {
             TaskFormView(
-                editingTask: editingTask,
                 onSave: { task in
-                    if editingTask != nil {
-                        do { try modelContext.save() } catch {
-                            print("[ClaudeCron] Failed to save context on edit: \(error.localizedDescription)")
-                        }
-                        LaunchdService.shared.install(task: task)
-
-                        if (editingOriginalFolder != task.sourceFolder || editingOriginalTaskId != task.taskId)
-                           && !editingOriginalFolder.isEmpty {
-                            var oldSettings = ConfigService.shared.read(folder: editingOriginalFolder)
-                            oldSettings.tasks.removeValue(forKey: editingOriginalTaskId)
-                            do {
-                                try ConfigService.shared.write(oldSettings, to: editingOriginalFolder)
-                            } catch {
-                                print("[ClaudeCron] Failed to write config on task move: \(error.localizedDescription)")
-                            }
-                        }
-
-                        persistToJSON(task: task)
-                        editingTask = nil
-                    } else {
-                        if task.sourceFolder != NSHomeDirectory() {
-                            folderRegistry.add(task.sourceFolder)
-                        }
-                        modelContext.insert(task)
-                        do { try modelContext.save() } catch {
-                            print("[ClaudeCron] Failed to save context on insert: \(error.localizedDescription)")
-                        }
-                        LaunchdService.shared.install(task: task)
-                        persistToJSON(task: task)
-                        showingNewTask = false
+                    if task.sourceFolder != NSHomeDirectory() {
+                        folderRegistry.add(task.sourceFolder)
                     }
-                },
-                onCancel: {
-                    editingTask = nil
+                    modelContext.insert(task)
+                    do { try modelContext.save() } catch {
+                        print("[ClaudeCron] Failed to save context on insert: \(error.localizedDescription)")
+                    }
+                    LaunchdService.shared.install(task: task)
+                    persistToJSON(task: task)
                     showingNewTask = false
-                }
+                },
+                onCancel: { showingNewTask = false }
             )
             .frame(minWidth: 450, minHeight: 500)
         }
@@ -328,53 +372,3 @@ struct StatusPill: View {
     }
 }
 
-// MARK: - Task Detail Sheet
-
-struct TaskDetailSheet: View {
-    @Bindable var task: ClaudeTask
-    var onEdit: (ClaudeTask) -> Void
-    var onDelete: (ClaudeTask) -> Void
-    @State private var selectedRun: TaskRun?
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // Sheet header with close button
-            HStack {
-                Text(task.name)
-                    .font(.title2.bold())
-                Spacer()
-                Button(action: { dismiss() }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
-                        .font(.title3)
-                }
-                .buttonStyle(.plain)
-            }
-            .padding()
-
-            Divider()
-
-            HSplitView {
-                TaskDetailView(
-                    task: task,
-                    selectedRun: $selectedRun,
-                    onEdit: { t in
-                        dismiss()
-                        onEdit(t)
-                    },
-                    onDelete: { t in
-                        dismiss()
-                        onDelete(t)
-                    }
-                )
-                .frame(minWidth: 280)
-
-                if let run = selectedRun {
-                    RunDetailView(run: run)
-                        .frame(minWidth: 300)
-                }
-            }
-        }
-    }
-}

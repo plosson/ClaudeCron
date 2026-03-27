@@ -226,7 +226,11 @@ final class LaunchdService {
         }
 
         run.log("Task: \(task.name) (id: \(task.compositeKey))")
-        run.log("Prompt: \(task.prompt)")
+        let effectivePrompt = task.resolvedPrompt
+        if !task.promptFile.isEmpty {
+            run.log("Prompt file: \(task.promptFile)")
+        }
+        run.log("Prompt: \(effectivePrompt)")
         run.log("Model: \(task.model), Permissions: \(task.permissionMode)")
         run.log("Session mode: \(task.sessionMode)")
 
@@ -237,8 +241,8 @@ final class LaunchdService {
         let allowedTools = task.allowedTools.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }
         let disallowedTools = task.disallowedTools.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }
 
-        _ = ClaudeService.shared.runTask(
-            prompt: task.prompt,
+        let processId = ClaudeService.shared.runTask(
+            prompt: effectivePrompt,
             directory: task.directory,
             model: task.model,
             permissionMode: task.permissionMode,
@@ -317,6 +321,19 @@ final class LaunchdService {
                 onDone?(exitCode)
             }
         )
+        run.processId = processId
+    }
+
+    func cancelRun(_ run: TaskRun, modelContext: ModelContext) {
+        if let pid = run.processId {
+            ClaudeService.shared.cancelRun(pid)
+        }
+        run.endedAt = Date()
+        run.runStatus = .cancelled
+        run.processId = nil
+        do { try modelContext.save() } catch {
+            print("[LaunchdService] Failed to save on cancel: \(error.localizedDescription)")
+        }
     }
 
     private func sendNotification(title: String, body: String) {

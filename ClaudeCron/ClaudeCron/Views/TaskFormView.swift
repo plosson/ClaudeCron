@@ -20,24 +20,35 @@ struct TaskFormView: View {
     @State private var useExistingCommand = false
     @State private var isLocalScope = false
     @State private var conflictWarning: String?
+    @State private var promptFile = ""
 
-    var editingTask: ClaudeTask?
+    private enum PromptSource: String, CaseIterable {
+        case inline = "Inline Prompt"
+        case file = "Prompt File"
+        case command = "Existing Command"
+    }
+
+    @State private var promptSource: PromptSource = .inline
+
     var onSave: (ClaudeTask) -> Void
     var onCancel: () -> Void
-
-    private var isEditing: Bool { editingTask != nil }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
             HStack {
-                Text(isEditing ? "Edit Task" : "New Task")
+                Text("New Task")
                     .font(.headline)
                 Spacer()
                 Button("Cancel", action: onCancel)
                 Button("Save") { save() }
                     .buttonStyle(.borderedProminent)
-                    .disabled(name.isEmpty || (prompt.isEmpty && !useExistingCommand) || directory.isEmpty || conflictWarning != nil)
+                    .disabled(name.isEmpty || directory.isEmpty || conflictWarning != nil || {
+                        switch promptSource {
+                        case .inline, .command: return prompt.isEmpty
+                        case .file: return promptFile.isEmpty
+                        }
+                    }())
             }
             .padding()
 
@@ -82,21 +93,46 @@ struct TaskFormView: View {
                         }
                     }
 
-                    // Prompt type toggle
-                    Picker("", selection: $useExistingCommand) {
-                        Text("Claude Prompt").tag(false)
-                        Text("Existing Command").tag(true)
+                    // Prompt source
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Prompt").font(.subheadline.bold())
+                        Picker("", selection: $promptSource) {
+                            ForEach(PromptSource.allCases, id: \.self) { s in
+                                Text(s.rawValue).tag(s)
+                            }
+                        }
+                        .pickerStyle(.segmented)
                     }
-                    .pickerStyle(.segmented)
 
-                    if useExistingCommand {
-                        TextField("e.g., /summarize", text: $prompt)
-                            .textFieldStyle(.roundedBorder)
-                    } else {
+                    switch promptSource {
+                    case .inline:
                         TextEditor(text: $prompt)
                             .font(.system(.body, design: .monospaced))
                             .frame(minHeight: 60)
                             .border(.secondary.opacity(0.3))
+                    case .file:
+                        HStack {
+                            TextField("path/to/prompt.md", text: $promptFile)
+                                .textFieldStyle(.roundedBorder)
+                            Button(action: browsePromptFile) {
+                                Image(systemName: "doc")
+                            }
+                        }
+                        if !promptFile.isEmpty && !directory.isEmpty {
+                            let fullPath = URL(fileURLWithPath: directory).appendingPathComponent(promptFile).path
+                            if FileManager.default.fileExists(atPath: fullPath) {
+                                Text("File found")
+                                    .font(.caption)
+                                    .foregroundStyle(.green)
+                            } else {
+                                Text("File not found at \(fullPath)")
+                                    .font(.caption)
+                                    .foregroundStyle(.red)
+                            }
+                        }
+                    case .command:
+                        TextField("e.g., /summarize", text: $prompt)
+                            .textFieldStyle(.roundedBorder)
                     }
 
                     // Working Directory
@@ -190,7 +226,6 @@ struct TaskFormView: View {
                 .padding()
             }
         }
-        .onAppear { populateFromEditingTask() }
         .onChange(of: isLocalScope) { _, _ in
             validateConflict()
         }
@@ -202,28 +237,6 @@ struct TaskFormView: View {
         }
     }
 
-    private func populateFromEditingTask() {
-        guard let task = editingTask else { return }
-        name = task.name
-        prompt = task.prompt
-        directory = task.directory
-        model = ClaudeModel(rawValue: task.model) ?? .sonnet
-        permissionMode = PermissionMode(rawValue: task.permissionMode) ?? .default_
-        useExistingCommand = task.prompt.hasPrefix("/")
-        let schedule = task.schedule
-        scheduleType = schedule.type
-        scheduleTime = schedule.time
-        selectedWeekdays = schedule.weekdays
-        intervalMinutes = schedule.intervalMinutes
-        sessionMode = SessionMode(rawValue: task.sessionMode) ?? .new
-        sessionId = task.sessionId ?? ""
-        allowedTools = task.allowedTools
-        disallowedTools = task.disallowedTools
-        notifyOnStart = task.notifyOnStart
-        notifyOnEnd = task.notifyOnEnd
-        isLocalScope = task.sourceFolder != NSHomeDirectory() && !task.sourceFolder.isEmpty
-    }
-
     private func save() {
         let schedule = TaskSchedule(
             type: scheduleType,
@@ -232,49 +245,29 @@ struct TaskFormView: View {
             intervalMinutes: intervalMinutes
         )
 
-        if let task = editingTask {
-            task.name = name
-            task.prompt = prompt
-            task.directory = directory
-            task.model = model.rawValue
-            task.permissionMode = permissionMode.rawValue
-            task.schedule = schedule
-            task.sessionMode = sessionMode.rawValue
-            task.allowedTools = allowedTools
-            task.disallowedTools = disallowedTools
-            task.notifyOnStart = notifyOnStart
-            task.notifyOnEnd = notifyOnEnd
-            if sessionMode != .new && !sessionId.isEmpty {
-                task.sessionId = sessionId
-            } else if sessionMode == .new {
-                task.sessionId = nil
-            }
-            task.sourceFolder = isLocalScope ? directory : NSHomeDirectory()
-            onSave(task)
-        } else {
-            let task = ClaudeTask(
-                name: name,
-                prompt: prompt,
-                directory: directory,
-                model: model,
-                permissionMode: permissionMode,
-                schedule: schedule,
-                sessionMode: sessionMode,
-                allowedTools: allowedTools,
-                disallowedTools: disallowedTools,
-                notifyOnStart: notifyOnStart,
-                notifyOnEnd: notifyOnEnd
-            )
-            if sessionMode != .new && !sessionId.isEmpty {
-                task.sessionId = sessionId
-            }
-            task.sourceFolder = isLocalScope ? directory : NSHomeDirectory()
-            task.taskId = name.lowercased()
-                .replacingOccurrences(of: " ", with: "-")
-                .replacingOccurrences(of: "[^a-z0-9-]", with: "", options: .regularExpression)
-            if task.taskId.isEmpty { task.taskId = UUID().uuidString }
-            onSave(task)
+        let task = ClaudeTask(
+            name: name,
+            prompt: promptSource == .file ? "" : prompt,
+            directory: directory,
+            model: model,
+            permissionMode: permissionMode,
+            schedule: schedule,
+            sessionMode: sessionMode,
+            allowedTools: allowedTools,
+            disallowedTools: disallowedTools,
+            notifyOnStart: notifyOnStart,
+            notifyOnEnd: notifyOnEnd
+        )
+        task.promptFile = promptSource == .file ? promptFile : ""
+        if sessionMode != .new && !sessionId.isEmpty {
+            task.sessionId = sessionId
         }
+        task.sourceFolder = isLocalScope ? directory : NSHomeDirectory()
+        task.taskId = name.lowercased()
+            .replacingOccurrences(of: " ", with: "-")
+            .replacingOccurrences(of: "[^a-z0-9-]", with: "", options: .regularExpression)
+        if task.taskId.isEmpty { task.taskId = UUID().uuidString }
+        onSave(task)
     }
 
     private func validateConflict() {
@@ -291,19 +284,34 @@ struct TaskFormView: View {
             return
         }
 
-        // Don't warn about conflict with self when editing
-        if let editing = editingTask,
-           editing.sourceFolder == folder && editing.taskId == candidateId {
-            conflictWarning = nil
-            return
-        }
-
         let settings = ConfigService.shared.read(folder: folder)
         if settings.tasks[candidateId] != nil {
             let scopeName = isLocalScope ? (directory as NSString).lastPathComponent : "Global"
             conflictWarning = "A task '\(candidateId)' already exists in \(scopeName)"
         } else {
             conflictWarning = nil
+        }
+    }
+
+    private func browsePromptFile() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.allowsMultipleSelection = false
+        if !directory.isEmpty {
+            panel.directoryURL = URL(fileURLWithPath: directory)
+        }
+        if panel.runModal() == .OK, let url = panel.url {
+            // Store path relative to the working directory
+            if !directory.isEmpty,
+               let relativePath = url.path.hasPrefix(directory)
+                ? String(url.path.dropFirst(directory.count).drop(while: { $0 == "/" }))
+                : nil,
+               !relativePath.isEmpty {
+                promptFile = relativePath
+            } else {
+                promptFile = url.path
+            }
         }
     }
 

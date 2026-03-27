@@ -68,18 +68,18 @@ struct TaskCardView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 4))
                 }
 
-                // Sparkline
-                if !task.runs.isEmpty {
-                    SparklineView(runs: task.runs)
-                }
+                // Sparkline (always reserve space for consistent card height)
+                SparklineView(runs: task.runs)
+                    .opacity(task.runs.isEmpty ? 0 : 1)
 
                 // Schedule + next run
-                VStack(alignment: .leading, spacing: 2) {
+                HStack {
                     Text(task.schedule.displaySummary)
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
                     if let next = nextRunDate {
+                        Spacer()
                         Text("Next: \(next, format: .dateTime.month(.abbreviated).day().hour().minute())")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
