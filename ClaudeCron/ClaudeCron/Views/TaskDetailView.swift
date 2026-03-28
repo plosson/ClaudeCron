@@ -11,7 +11,6 @@ struct TaskDetailView: View {
     @State private var promptText = ""
     @State private var promptFile = ""
     @State private var showConfig = false
-    @State private var statusMessage: String?
     @State private var isLocalScope = false
     @State private var showAvatarPicker = false
 
@@ -92,8 +91,8 @@ struct TaskDetailView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
 
-                    // ── Hero: Avatar + Name + Description ──
-                    HStack(alignment: .top, spacing: 14) {
+                    // ── Hero: Avatar + Name ──
+                    HStack(alignment: .center, spacing: 14) {
                         PixelAvatarView(config: task.avatarConfig, pixelSize: 5)
                             .onTapGesture { showAvatarPicker = true }
                             .popover(isPresented: $showAvatarPicker) {
@@ -109,35 +108,59 @@ struct TaskDetailView: View {
                             }
                             .help("Click to customize avatar")
 
-                        VStack(alignment: .leading, spacing: 6) {
-                            TextField("Agent name", text: $task.name)
-                                .font(.title2.bold())
-                                .textFieldStyle(.plain)
+                        TextField("Agent name", text: $task.name)
+                            .font(.title2.bold())
+                            .textFieldStyle(.plain)
+                    }
 
-                            HStack(alignment: .top, spacing: 6) {
-                                TextEditor(text: $task.taskDescription)
-                                    .font(.body)
-                                    .foregroundStyle(.secondary)
-                                    .frame(height: 44)
-                                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 6)
-                                            .strokeBorder(.secondary.opacity(0.15))
-                                    )
-                                Button(action: generateDescription) {
-                                    if statusMessage != nil {
-                                        ProgressView()
-                                            .controlSize(.small)
-                                    } else {
-                                        Image(systemName: "wand.and.stars")
-                                    }
+                    // ── Prompt (centerpiece) ──
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Text("Instructions")
+                                .font(.subheadline.bold())
+                            Spacer()
+                            Picker("", selection: $promptSource) {
+                                ForEach(PromptSource.allCases, id: \.self) { s in
+                                    Text(s.rawValue).tag(s)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                            .frame(width: 200)
+                        }
+
+                        switch promptSource {
+                        case .inline:
+                            TextEditor(text: $promptText)
+                                .font(.system(.body, design: .monospaced))
+                                .frame(minHeight: 120, maxHeight: .infinity)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .strokeBorder(.secondary.opacity(0.2))
+                                )
+                        case .file:
+                            HStack(spacing: 6) {
+                                TextField("path/to/prompt.md", text: $promptFile)
+                                    .textFieldStyle(.roundedBorder)
+                                Button(action: browsePromptFile) {
+                                    Image(systemName: "doc")
                                 }
                                 .buttonStyle(.bordered)
-                                .tint(.cyan)
                                 .controlSize(.small)
-                                .disabled(statusMessage != nil)
-                                .help("Generate with AI")
                             }
+                            if !promptFile.isEmpty && !task.directory.isEmpty {
+                                let fullPath = URL(fileURLWithPath: task.directory).appendingPathComponent(promptFile).path
+                                HStack(spacing: 4) {
+                                    Image(systemName: FileManager.default.fileExists(atPath: fullPath) ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                                        .font(.caption)
+                                    Text(FileManager.default.fileExists(atPath: fullPath) ? "File found" : "File not found")
+                                        .font(.caption)
+                                }
+                                .foregroundStyle(FileManager.default.fileExists(atPath: fullPath) ? .green : .red)
+                            }
+                        case .command:
+                            TextField("e.g., /summarize", text: $promptText)
+                                .textFieldStyle(.roundedBorder)
                         }
                     }
 
@@ -211,58 +234,6 @@ struct TaskDetailView: View {
                                     Text("Saved in ~/.ccron/settings.json")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
-                                }
-                            }
-
-                            // Prompt
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text("Prompt")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                    Spacer()
-                                    Picker("", selection: $promptSource) {
-                                        ForEach(PromptSource.allCases, id: \.self) { s in
-                                            Text(s.rawValue).tag(s)
-                                        }
-                                    }
-                                    .pickerStyle(.segmented)
-                                    .frame(width: 220)
-                                }
-
-                                switch promptSource {
-                                case .inline:
-                                    TextEditor(text: $promptText)
-                                        .font(.system(.body, design: .monospaced))
-                                        .frame(minHeight: 80, maxHeight: 200)
-                                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 6)
-                                                .strokeBorder(.secondary.opacity(0.2))
-                                        )
-                                case .file:
-                                    HStack(spacing: 6) {
-                                        TextField("path/to/prompt.md", text: $promptFile)
-                                            .textFieldStyle(.roundedBorder)
-                                        Button(action: browsePromptFile) {
-                                            Image(systemName: "doc")
-                                        }
-                                        .buttonStyle(.bordered)
-                                        .controlSize(.small)
-                                    }
-                                    if !promptFile.isEmpty && !task.directory.isEmpty {
-                                        let fullPath = URL(fileURLWithPath: task.directory).appendingPathComponent(promptFile).path
-                                        HStack(spacing: 4) {
-                                            Image(systemName: FileManager.default.fileExists(atPath: fullPath) ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                                                .font(.caption)
-                                            Text(FileManager.default.fileExists(atPath: fullPath) ? "File found" : "File not found")
-                                                .font(.caption)
-                                        }
-                                        .foregroundStyle(FileManager.default.fileExists(atPath: fullPath) ? .green : .red)
-                                    }
-                                case .command:
-                                    TextField("e.g., /summarize", text: $promptText)
-                                        .textFieldStyle(.roundedBorder)
                                 }
                             }
 
@@ -343,20 +314,6 @@ struct TaskDetailView: View {
                 .padding(16)
             }
 
-            // Status bar
-            if let statusMessage {
-                Divider()
-                HStack(spacing: 6) {
-                    ProgressView()
-                        .controlSize(.small)
-                    Text(statusMessage)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 6)
-            }
         }
         .onAppear { loadPromptState() }
         .onReceive(NotificationCenter.default.publisher(for: .saveTaskShortcut)) { _ in
@@ -374,47 +331,6 @@ struct TaskDetailView: View {
             promptSource = .command
         } else {
             promptSource = .inline
-        }
-    }
-
-    private func generateDescription() {
-        // Use the current prompt text, not the saved one
-        let prompt: String
-        switch promptSource {
-        case .inline, .command: prompt = promptText
-        case .file:
-            if !promptFile.isEmpty && !task.directory.isEmpty {
-                let url = URL(fileURLWithPath: task.directory).appendingPathComponent(promptFile)
-                prompt = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
-            } else {
-                prompt = ""
-            }
-        }
-        guard !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            statusMessage = "No prompt to summarize"
-            Task { @MainActor in
-                try? await Task.sleep(for: .seconds(2))
-                statusMessage = nil
-            }
-            return
-        }
-        guard ClaudeService.shared.claudePath() != nil else {
-            statusMessage = "Claude CLI not found"
-            Task { @MainActor in
-                try? await Task.sleep(for: .seconds(2))
-                statusMessage = nil
-            }
-            return
-        }
-
-        statusMessage = "Generating description..."
-        ClaudeService.shared.summarizePrompt(prompt) { summary in
-            Task { @MainActor in
-                if let summary {
-                    task.taskDescription = summary
-                }
-                statusMessage = nil
-            }
         }
     }
 
