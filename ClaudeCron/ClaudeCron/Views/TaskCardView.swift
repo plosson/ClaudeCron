@@ -97,10 +97,6 @@ struct TaskCardView: View {
                             .lineLimit(2)
                     }
 
-                    // Sparkline (always reserve space for consistent card height)
-                    SparklineView(runs: task.runs)
-                        .opacity(task.runs.isEmpty ? 0 : 1)
-
                     // Schedule + next run
                     HStack {
                         Text(task.schedule.displaySummary)
