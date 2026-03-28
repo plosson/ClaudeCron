@@ -12,7 +12,7 @@ final class ClaudeService {
         let process = Process()
         let pipe = Pipe()
         process.executableURL = URL(fileURLWithPath: "/bin/zsh")
-        process.arguments = ["-l", "-c", "env"]
+        process.arguments = ["-lic", "env"]
         process.standardOutput = pipe
         process.standardError = FileHandle.nullDevice
         try? process.run()
@@ -46,7 +46,7 @@ final class ClaudeService {
         return autoDetectClaudePath()
     }
 
-    /// Auto-detect claude binary using the cached shell PATH
+    /// Auto-detect claude binary using the cached shell PATH + common locations
     nonisolated func autoDetectClaudePath() -> String? {
         let shellPath = Self.shellEnvironment["PATH"] ?? ""
         let dirs = shellPath.components(separatedBy: ":")
@@ -54,6 +54,19 @@ final class ClaudeService {
             let candidate = (dir as NSString).appendingPathComponent("claude")
             if FileManager.default.isExecutableFile(atPath: candidate) {
                 return candidate
+            }
+        }
+        // Fallback: check common install locations not always in PATH
+        let home = NSHomeDirectory()
+        let fallbacks = [
+            "\(home)/.claude/local/bin/claude",
+            "\(home)/.local/bin/claude",
+            "/usr/local/bin/claude",
+            "/opt/homebrew/bin/claude",
+        ]
+        for path in fallbacks {
+            if FileManager.default.isExecutableFile(atPath: path) {
+                return path
             }
         }
         return nil
