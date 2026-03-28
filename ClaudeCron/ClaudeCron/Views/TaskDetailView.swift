@@ -10,7 +10,7 @@ struct TaskDetailView: View {
     @State private var promptSource: PromptSource = .inline
     @State private var promptText = ""
     @State private var promptFile = ""
-    @State private var showAdvanced = false
+    @State private var showConfig = false
     @State private var statusMessage: String?
     @State private var isLocalScope = false
     @State private var showAvatarPicker = false
@@ -90,155 +90,64 @@ struct TaskDetailView: View {
 
             // Form
             ScrollView {
-                VStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 20) {
 
-                    // ── 1. What ──
-                    FormSection("What", icon: "text.quote") {
-                        HStack(alignment: .top, spacing: 12) {
-                            PixelAvatarView(config: task.avatarConfig, pixelSize: 4)
-                                .onTapGesture { showAvatarPicker = true }
-                                .popover(isPresented: $showAvatarPicker) {
-                                    AvatarPickerView(
-                                        config: Binding(
-                                            get: { task.avatarConfig },
-                                            set: { task.avatarConfig = $0 }
-                                        ),
-                                        onReset: {
-                                            task.avatarConfigData = nil
-                                        }
-                                    )
-                                }
-                                .help("Click to customize avatar")
-
-                            VStack(alignment: .leading, spacing: 8) {
-                                TextField("Task name", text: $task.name)
-                                    .font(.title3.bold())
-                                    .textFieldStyle(.plain)
-
-                                FormField("Description") {
-                                    HStack(alignment: .top, spacing: 6) {
-                                        TextEditor(text: $task.taskDescription)
-                                            .font(.body)
-                                            .frame(height: 50)
-                                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 6)
-                                                    .strokeBorder(.secondary.opacity(0.2))
-                                            )
-                                        Button(action: generateDescription) {
-                                            if statusMessage != nil {
-                                                ProgressView()
-                                                    .controlSize(.small)
-                                            } else {
-                                                Image(systemName: "wand.and.stars")
-                                            }
-                                        }
-                                        .buttonStyle(.bordered)
-                                        .tint(.cyan)
-                                        .controlSize(.small)
-                                        .disabled(statusMessage != nil)
-                                        .help("Generate with AI")
+                    // ── Hero: Avatar + Name + Description ──
+                    HStack(alignment: .top, spacing: 14) {
+                        PixelAvatarView(config: task.avatarConfig, pixelSize: 5)
+                            .onTapGesture { showAvatarPicker = true }
+                            .popover(isPresented: $showAvatarPicker) {
+                                AvatarPickerView(
+                                    config: Binding(
+                                        get: { task.avatarConfig },
+                                        set: { task.avatarConfig = $0 }
+                                    ),
+                                    onReset: {
+                                        task.avatarConfigData = nil
                                     }
-                                }
+                                )
                             }
-                        }
-                    }
+                            .help("Click to customize avatar")
 
-                    // ── 2. Where & How ──
-                    FormSection("Where & How", icon: "terminal") {
-                        FormField("Working Directory") {
-                            HStack(spacing: 6) {
-                                TextField("/path/to/project", text: $task.directory)
-                                    .textFieldStyle(.roundedBorder)
-                                Button(action: browseDirectory) {
-                                    Image(systemName: "folder")
-                                }
-                                .buttonStyle(.bordered)
-                                .controlSize(.small)
-                                .help("Browse for directory")
-                            }
-                        }
+                        VStack(alignment: .leading, spacing: 6) {
+                            TextField("Agent name", text: $task.name)
+                                .font(.title2.bold())
+                                .textFieldStyle(.plain)
 
-                        FormField("Scope") {
-                            Picker("", selection: $isLocalScope) {
-                                Text("Global").tag(false)
-                                Text("Local").tag(true)
-                            }
-                            .pickerStyle(.segmented)
-                            .frame(width: 180)
-
-                            if isLocalScope {
-                                if task.directory.isEmpty {
-                                    Text("Set a working directory first")
-                                        .font(.caption)
-                                        .foregroundStyle(.orange)
-                                } else {
-                                    Text("Saved in \(task.directory)/.ccron/settings.json")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            } else {
-                                Text("Saved in ~/.ccron/settings.json")
-                                    .font(.caption)
+                            HStack(alignment: .top, spacing: 6) {
+                                TextEditor(text: $task.taskDescription)
+                                    .font(.body)
                                     .foregroundStyle(.secondary)
-                            }
-                        }
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text("Prompt")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                Spacer()
-                                Picker("", selection: $promptSource) {
-                                    ForEach(PromptSource.allCases, id: \.self) { s in
-                                        Text(s.rawValue).tag(s)
-                                    }
-                                }
-                                .pickerStyle(.segmented)
-                                .frame(width: 220)
-                            }
-
-                            switch promptSource {
-                            case .inline:
-                                TextEditor(text: $promptText)
-                                    .font(.system(.body, design: .monospaced))
-                                    .frame(minHeight: 80, maxHeight: 200)
+                                    .frame(height: 44)
                                     .clipShape(RoundedRectangle(cornerRadius: 6))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 6)
-                                            .strokeBorder(.secondary.opacity(0.2))
+                                            .strokeBorder(.secondary.opacity(0.15))
                                     )
-                            case .file:
-                                HStack(spacing: 6) {
-                                    TextField("path/to/prompt.md", text: $promptFile)
-                                        .textFieldStyle(.roundedBorder)
-                                    Button(action: browsePromptFile) {
-                                        Image(systemName: "doc")
+                                Button(action: generateDescription) {
+                                    if statusMessage != nil {
+                                        ProgressView()
+                                            .controlSize(.small)
+                                    } else {
+                                        Image(systemName: "wand.and.stars")
                                     }
-                                    .buttonStyle(.bordered)
-                                    .controlSize(.small)
-                                    .help("Browse for prompt file")
                                 }
-                                if !promptFile.isEmpty && !task.directory.isEmpty {
-                                    let fullPath = URL(fileURLWithPath: task.directory).appendingPathComponent(promptFile).path
-                                    HStack(spacing: 4) {
-                                        Image(systemName: FileManager.default.fileExists(atPath: fullPath) ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                                            .font(.caption)
-                                        Text(FileManager.default.fileExists(atPath: fullPath) ? "File found" : "File not found")
-                                            .font(.caption)
-                                    }
-                                    .foregroundStyle(FileManager.default.fileExists(atPath: fullPath) ? .green : .red)
-                                }
-                            case .command:
-                                TextField("e.g., /summarize", text: $promptText)
-                                    .textFieldStyle(.roundedBorder)
+                                .buttonStyle(.bordered)
+                                .tint(.cyan)
+                                .controlSize(.small)
+                                .disabled(statusMessage != nil)
+                                .help("Generate with AI")
                             }
                         }
                     }
 
-                    // ── 3. When ──
-                    FormSection("Schedule", icon: "calendar.badge.clock") {
+                    Divider()
+
+                    // ── Schedule ──
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Schedule")
+                            .font(.subheadline.bold())
+
                         Picker("", selection: scheduleBinding.type) {
                             ForEach(ScheduleType.allCases, id: \.self) { t in
                                 Text(t.rawValue).tag(t)
@@ -260,82 +169,178 @@ struct TaskDetailView: View {
                         }
                     }
 
-                    // ── 4. Settings ──
-                    FormSection("Settings", icon: "gearshape") {
-                        HStack(spacing: 16) {
-                            Toggle("Notify on start", isOn: $task.notifyOnStart)
-                                .toggleStyle(.checkbox)
-                            Toggle("Notify on completion", isOn: $task.notifyOnEnd)
-                                .toggleStyle(.checkbox)
-                        }
+                    Divider()
 
-                        DisclosureGroup(isExpanded: $showAdvanced) {
-                            VStack(alignment: .leading, spacing: 10) {
-                                HStack(spacing: 16) {
-                                    FormField("Model") {
-                                        Picker("", selection: $task.model) {
-                                            ForEach(ClaudeModel.allCases, id: \.self) { m in
-                                                Text(m.rawValue.capitalized).tag(m.rawValue)
-                                            }
-                                        }
-                                        .labelsHidden()
-                                    }
+                    // ── Configuration (collapsed) ──
+                    DisclosureGroup(isExpanded: $showConfig) {
+                        VStack(alignment: .leading, spacing: 14) {
 
-                                    FormField("Permissions") {
-                                        Picker("", selection: $task.permissionMode) {
-                                            Text("Default").tag(PermissionMode.default_.rawValue)
-                                            Text("Bypass").tag(PermissionMode.bypass.rawValue)
-                                            Text("Plan").tag(PermissionMode.plan.rawValue)
-                                            Text("Accept Edits").tag(PermissionMode.acceptEdits.rawValue)
-                                        }
-                                        .labelsHidden()
-                                    }
-                                }
-
-                                HStack(spacing: 16) {
-                                    FormField("Session") {
-                                        Picker("", selection: Binding(
-                                            get: { SessionMode(rawValue: task.sessionMode) ?? .new },
-                                            set: { task.sessionMode = $0.rawValue }
-                                        )) {
-                                            ForEach(SessionMode.allCases, id: \.self) { m in
-                                                Text(m.rawValue).tag(m)
-                                            }
-                                        }
-                                        .labelsHidden()
-                                    }
-
-                                    if task.sessionMode != SessionMode.new.rawValue {
-                                        FormField("Session ID") {
-                                            TextField("", text: Binding(
-                                                get: { task.sessionId ?? "" },
-                                                set: { task.sessionId = $0.isEmpty ? nil : $0 }
-                                            ))
-                                            .textFieldStyle(.roundedBorder)
-                                        }
-                                    }
-                                }
-
-                                FormField("Allowed Tools") {
-                                    TextField("comma-separated", text: $task.allowedTools)
+                            // Working directory
+                            FormField("Working Directory") {
+                                HStack(spacing: 6) {
+                                    TextField("/path/to/project", text: $task.directory)
                                         .textFieldStyle(.roundedBorder)
+                                    Button(action: browseDirectory) {
+                                        Image(systemName: "folder")
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
+                                }
+                            }
+
+                            // Scope
+                            FormField("Scope") {
+                                Picker("", selection: $isLocalScope) {
+                                    Text("Global").tag(false)
+                                    Text("Local").tag(true)
+                                }
+                                .pickerStyle(.segmented)
+                                .frame(width: 180)
+
+                                if isLocalScope {
+                                    if task.directory.isEmpty {
+                                        Text("Set a working directory first")
+                                            .font(.caption)
+                                            .foregroundStyle(.orange)
+                                    } else {
+                                        Text("Saved in \(task.directory)/.ccron/settings.json")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                } else {
+                                    Text("Saved in ~/.ccron/settings.json")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+
+                            // Prompt
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text("Prompt")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Spacer()
+                                    Picker("", selection: $promptSource) {
+                                        ForEach(PromptSource.allCases, id: \.self) { s in
+                                            Text(s.rawValue).tag(s)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+                                    .frame(width: 220)
                                 }
 
-                                FormField("Disallowed Tools") {
-                                    TextField("comma-separated", text: $task.disallowedTools)
+                                switch promptSource {
+                                case .inline:
+                                    TextEditor(text: $promptText)
+                                        .font(.system(.body, design: .monospaced))
+                                        .frame(minHeight: 80, maxHeight: 200)
+                                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .strokeBorder(.secondary.opacity(0.2))
+                                        )
+                                case .file:
+                                    HStack(spacing: 6) {
+                                        TextField("path/to/prompt.md", text: $promptFile)
+                                            .textFieldStyle(.roundedBorder)
+                                        Button(action: browsePromptFile) {
+                                            Image(systemName: "doc")
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .controlSize(.small)
+                                    }
+                                    if !promptFile.isEmpty && !task.directory.isEmpty {
+                                        let fullPath = URL(fileURLWithPath: task.directory).appendingPathComponent(promptFile).path
+                                        HStack(spacing: 4) {
+                                            Image(systemName: FileManager.default.fileExists(atPath: fullPath) ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                                                .font(.caption)
+                                            Text(FileManager.default.fileExists(atPath: fullPath) ? "File found" : "File not found")
+                                                .font(.caption)
+                                        }
+                                        .foregroundStyle(FileManager.default.fileExists(atPath: fullPath) ? .green : .red)
+                                    }
+                                case .command:
+                                    TextField("e.g., /summarize", text: $promptText)
                                         .textFieldStyle(.roundedBorder)
                                 }
                             }
-                            .padding(.top, 8)
-                        } label: {
-                            Text("Advanced")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+
+                            Divider()
+
+                            // Notifications
+                            HStack(spacing: 16) {
+                                Toggle("Notify on start", isOn: $task.notifyOnStart)
+                                    .toggleStyle(.checkbox)
+                                Toggle("Notify on completion", isOn: $task.notifyOnEnd)
+                                    .toggleStyle(.checkbox)
+                            }
+
+                            // Model & Permissions
+                            HStack(spacing: 16) {
+                                FormField("Model") {
+                                    Picker("", selection: $task.model) {
+                                        ForEach(ClaudeModel.allCases, id: \.self) { m in
+                                            Text(m.rawValue.capitalized).tag(m.rawValue)
+                                        }
+                                    }
+                                    .labelsHidden()
+                                }
+
+                                FormField("Permissions") {
+                                    Picker("", selection: $task.permissionMode) {
+                                        Text("Default").tag(PermissionMode.default_.rawValue)
+                                        Text("Bypass").tag(PermissionMode.bypass.rawValue)
+                                        Text("Plan").tag(PermissionMode.plan.rawValue)
+                                        Text("Accept Edits").tag(PermissionMode.acceptEdits.rawValue)
+                                    }
+                                    .labelsHidden()
+                                }
+                            }
+
+                            // Session
+                            HStack(spacing: 16) {
+                                FormField("Session") {
+                                    Picker("", selection: Binding(
+                                        get: { SessionMode(rawValue: task.sessionMode) ?? .new },
+                                        set: { task.sessionMode = $0.rawValue }
+                                    )) {
+                                        ForEach(SessionMode.allCases, id: \.self) { m in
+                                            Text(m.rawValue).tag(m)
+                                        }
+                                    }
+                                    .labelsHidden()
+                                }
+
+                                if task.sessionMode != SessionMode.new.rawValue {
+                                    FormField("Session ID") {
+                                        TextField("", text: Binding(
+                                            get: { task.sessionId ?? "" },
+                                            set: { task.sessionId = $0.isEmpty ? nil : $0 }
+                                        ))
+                                        .textFieldStyle(.roundedBorder)
+                                    }
+                                }
+                            }
+
+                            // Tools
+                            FormField("Allowed Tools") {
+                                TextField("comma-separated", text: $task.allowedTools)
+                                    .textFieldStyle(.roundedBorder)
+                            }
+
+                            FormField("Disallowed Tools") {
+                                TextField("comma-separated", text: $task.disallowedTools)
+                                    .textFieldStyle(.roundedBorder)
+                            }
                         }
+                        .padding(.top, 8)
+                    } label: {
+                        Text("Configuration")
+                            .font(.subheadline.bold())
                     }
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 12)
+                .padding(16)
             }
 
             // Status bar
