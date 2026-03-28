@@ -3,7 +3,7 @@ import SwiftUI
 struct SettingsView: View {
     @AppStorage("use24HourFormat") private var use24HourFormat = false
     @AppStorage("defaultWorkingDirectory") private var defaultWorkingDirectory = "~/Projects"
-    @AppStorage("defaultModel") private var defaultModel = "sonnet"
+    @AppStorage("defaultModel") private var defaultModel = "opus"
     @AppStorage("autoScrollLogs") private var autoScrollLogs = true
     @AppStorage("claudeExecutablePath") private var claudeExecutablePath = ""
     @Environment(UpdateService.self) private var updateService

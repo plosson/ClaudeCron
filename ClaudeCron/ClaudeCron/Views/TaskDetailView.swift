@@ -263,27 +263,6 @@ struct TaskDetailView: View {
                     // ── 4. Settings ──
                     FormSection("Settings", icon: "gearshape") {
                         HStack(spacing: 16) {
-                            FormField("Model") {
-                                Picker("", selection: $task.model) {
-                                    ForEach(ClaudeModel.allCases, id: \.self) { m in
-                                        Text(m.rawValue.capitalized).tag(m.rawValue)
-                                    }
-                                }
-                                .labelsHidden()
-                            }
-
-                            FormField("Permissions") {
-                                Picker("", selection: $task.permissionMode) {
-                                    Text("Default").tag(PermissionMode.default_.rawValue)
-                                    Text("Bypass").tag(PermissionMode.bypass.rawValue)
-                                    Text("Plan").tag(PermissionMode.plan.rawValue)
-                                    Text("Accept Edits").tag(PermissionMode.acceptEdits.rawValue)
-                                }
-                                .labelsHidden()
-                            }
-                        }
-
-                        HStack(spacing: 16) {
                             Toggle("Notify on start", isOn: $task.notifyOnStart)
                                 .toggleStyle(.checkbox)
                             Toggle("Notify on completion", isOn: $task.notifyOnEnd)
@@ -292,6 +271,27 @@ struct TaskDetailView: View {
 
                         DisclosureGroup(isExpanded: $showAdvanced) {
                             VStack(alignment: .leading, spacing: 10) {
+                                HStack(spacing: 16) {
+                                    FormField("Model") {
+                                        Picker("", selection: $task.model) {
+                                            ForEach(ClaudeModel.allCases, id: \.self) { m in
+                                                Text(m.rawValue.capitalized).tag(m.rawValue)
+                                            }
+                                        }
+                                        .labelsHidden()
+                                    }
+
+                                    FormField("Permissions") {
+                                        Picker("", selection: $task.permissionMode) {
+                                            Text("Default").tag(PermissionMode.default_.rawValue)
+                                            Text("Bypass").tag(PermissionMode.bypass.rawValue)
+                                            Text("Plan").tag(PermissionMode.plan.rawValue)
+                                            Text("Accept Edits").tag(PermissionMode.acceptEdits.rawValue)
+                                        }
+                                        .labelsHidden()
+                                    }
+                                }
+
                                 HStack(spacing: 16) {
                                     FormField("Session") {
                                         Picker("", selection: Binding(
