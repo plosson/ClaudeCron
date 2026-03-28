@@ -12,6 +12,7 @@ struct TaskDetailView: View {
     @State private var promptFile = ""
     @State private var showAdvanced = false
     @State private var statusMessage: String?
+    @State private var isLocalScope = false
 
     enum PromptSource: String, CaseIterable {
         case inline = "Inline"
@@ -135,6 +136,31 @@ struct TaskDetailView: View {
                                 .buttonStyle(.bordered)
                                 .controlSize(.small)
                                 .help("Browse for directory")
+                            }
+                        }
+
+                        FormField("Scope") {
+                            Picker("", selection: $isLocalScope) {
+                                Text("Global").tag(false)
+                                Text("Local").tag(true)
+                            }
+                            .pickerStyle(.segmented)
+                            .frame(width: 180)
+
+                            if isLocalScope {
+                                if task.directory.isEmpty {
+                                    Text("Set a working directory first")
+                                        .font(.caption)
+                                        .foregroundStyle(.orange)
+                                } else {
+                                    Text("Saved in \(task.directory)/.ccron/settings.json")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            } else {
+                                Text("Saved in ~/.ccron/settings.json")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
                             }
                         }
 
@@ -316,6 +342,7 @@ struct TaskDetailView: View {
     private func loadPromptState() {
         promptFile = task.promptFile
         promptText = task.prompt
+        isLocalScope = !task.sourceFolder.isEmpty && task.sourceFolder != NSHomeDirectory()
         if !task.promptFile.isEmpty {
             promptSource = .file
         } else if task.prompt.hasPrefix("/") {
@@ -383,6 +410,9 @@ struct TaskDetailView: View {
                 .replacingOccurrences(of: "[^a-z0-9-]", with: "", options: .regularExpression)
             if task.taskId.isEmpty { task.taskId = UUID().uuidString }
         }
+
+        // Update sourceFolder based on scope
+        task.sourceFolder = isLocalScope ? task.directory : NSHomeDirectory()
 
         do { try modelContext.save() } catch {
             print("[ClaudeCron] Failed to save: \(error.localizedDescription)")
