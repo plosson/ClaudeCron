@@ -338,8 +338,22 @@ struct TaskDetailView: View {
                 prompt = ""
             }
         }
-        guard !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              ClaudeService.shared.claudePath() != nil else { return }
+        guard !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            statusMessage = "No prompt to summarize"
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(2))
+                statusMessage = nil
+            }
+            return
+        }
+        guard ClaudeService.shared.claudePath() != nil else {
+            statusMessage = "Claude CLI not found"
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(2))
+                statusMessage = nil
+            }
+            return
+        }
 
         statusMessage = "Generating description..."
         ClaudeService.shared.summarizePrompt(prompt) { summary in
