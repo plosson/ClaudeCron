@@ -41,7 +41,10 @@ struct SettingsView: View {
                 TextField("Default working directory", text: $defaultWorkingDirectory)
 
                 HStack {
-                    TextField("Claude executable path", text: $claudeExecutablePath, prompt: Text(detectedPath ?? "Auto-detect"))
+                    TextField("Claude executable path", text: Binding(
+                        get: { claudeExecutablePath.isEmpty ? (detectedPath ?? "") : claudeExecutablePath },
+                        set: { claudeExecutablePath = $0 }
+                    ))
                     if !claudeExecutablePath.isEmpty {
                         Button(action: { claudeExecutablePath = "" }) {
                             Image(systemName: "xmark.circle.fill")
@@ -51,14 +54,16 @@ struct SettingsView: View {
                         .help("Clear to use auto-detection")
                     }
                 }
-                if claudeExecutablePath.isEmpty, let detected = detectedPath {
-                    Text("Detected: \(detected)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else if claudeExecutablePath.isEmpty {
-                    Text("Auto-detection active")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                if claudeExecutablePath.isEmpty {
+                    if detectedPath != nil {
+                        Text("Auto-detected")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text("Not found")
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                    }
                 }
             }
         }
