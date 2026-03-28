@@ -13,6 +13,7 @@ struct TaskDetailView: View {
     @State private var showAdvanced = false
     @State private var statusMessage: String?
     @State private var isLocalScope = false
+    @State private var showAvatarPicker = false
 
     enum PromptSource: String, CaseIterable {
         case inline = "Inline"
@@ -93,33 +94,52 @@ struct TaskDetailView: View {
 
                     // ── 1. What ──
                     FormSection("What", icon: "text.quote") {
-                        TextField("Task name", text: $task.name)
-                            .font(.title3.bold())
-                            .textFieldStyle(.plain)
-
-                        FormField("Description") {
-                            HStack(alignment: .top, spacing: 6) {
-                                TextEditor(text: $task.taskDescription)
-                                    .font(.body)
-                                    .frame(height: 50)
-                                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 6)
-                                            .strokeBorder(.secondary.opacity(0.2))
+                        HStack(alignment: .top, spacing: 12) {
+                            PixelAvatarView(config: task.avatarConfig, pixelSize: 4)
+                                .onTapGesture { showAvatarPicker = true }
+                                .popover(isPresented: $showAvatarPicker) {
+                                    AvatarPickerView(
+                                        config: Binding(
+                                            get: { task.avatarConfig },
+                                            set: { task.avatarConfig = $0 }
+                                        ),
+                                        onReset: {
+                                            task.avatarConfigData = nil
+                                        }
                                     )
-                                Button(action: generateDescription) {
-                                    if statusMessage != nil {
-                                        ProgressView()
-                                            .controlSize(.small)
-                                    } else {
-                                        Image(systemName: "wand.and.stars")
+                                }
+                                .help("Click to customize avatar")
+
+                            VStack(alignment: .leading, spacing: 8) {
+                                TextField("Task name", text: $task.name)
+                                    .font(.title3.bold())
+                                    .textFieldStyle(.plain)
+
+                                FormField("Description") {
+                                    HStack(alignment: .top, spacing: 6) {
+                                        TextEditor(text: $task.taskDescription)
+                                            .font(.body)
+                                            .frame(height: 50)
+                                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 6)
+                                                    .strokeBorder(.secondary.opacity(0.2))
+                                            )
+                                        Button(action: generateDescription) {
+                                            if statusMessage != nil {
+                                                ProgressView()
+                                                    .controlSize(.small)
+                                            } else {
+                                                Image(systemName: "wand.and.stars")
+                                            }
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .tint(.cyan)
+                                        .controlSize(.small)
+                                        .disabled(statusMessage != nil)
+                                        .help("Generate with AI")
                                     }
                                 }
-                                .buttonStyle(.bordered)
-                                .tint(.cyan)
-                                .controlSize(.small)
-                                .disabled(statusMessage != nil)
-                                .help("Generate with AI")
                             }
                         }
                     }

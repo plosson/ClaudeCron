@@ -41,6 +41,7 @@ final class ClaudeTask {
     var taskId: String = ""         // string key in the tasks dict (e.g. "daily-cleanup")
     var promptFile: String = ""     // relative path to a prompt file (empty = inline prompt)
     var taskDescription: String = "" // AI-generated summary of what the task does
+    var avatarConfigData: Data?      // JSON-encoded AvatarConfig (nil = auto-generated)
 
     @Relationship(deleteRule: .cascade, inverse: \TaskRun.task)
     var runs: [TaskRun]
@@ -52,6 +53,19 @@ final class ClaudeTask {
         }
         set {
             scheduleData = try? JSONEncoder().encode(newValue)
+        }
+    }
+
+    var avatarConfig: AvatarConfig {
+        get {
+            if let data = avatarConfigData,
+               let config = try? JSONDecoder().decode(AvatarConfig.self, from: data) {
+                return config
+            }
+            return .generate(from: id.uuidString)
+        }
+        set {
+            avatarConfigData = try? JSONEncoder().encode(newValue)
         }
     }
 
