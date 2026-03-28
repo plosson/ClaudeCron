@@ -47,8 +47,8 @@ struct RunDetailView: View {
                         Section("Upcoming") {
                             ForEach(upcomingRuns, id: \.self) { date in
                                 HStack {
-                                    Image(systemName: "clock")
-                                        .foregroundStyle(.secondary)
+                                    Image(systemName: "clock.fill")
+                                        .foregroundStyle(.orange)
                                     Text(date, format: .dateTime.month().day().hour().minute())
                                     Spacer()
                                     Text("UPCOMING")
@@ -106,6 +106,7 @@ struct RunDetailView: View {
                             .buttonStyle(.bordered)
                             .tint(.red)
                             .controlSize(.small)
+                            .help("Stop this run")
                         }
                         if run.sessionId != nil {
                             Menu {

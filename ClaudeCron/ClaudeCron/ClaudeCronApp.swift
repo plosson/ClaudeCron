@@ -2,6 +2,15 @@ import SwiftUI
 import SwiftData
 import Sparkle
 
+extension Notification.Name {
+    static let newTaskShortcut = Notification.Name("newTaskShortcut")
+    static let runTaskShortcut = Notification.Name("runTaskShortcut")
+    static let saveTaskShortcut = Notification.Name("saveTaskShortcut")
+    static let toggleTaskShortcut = Notification.Name("toggleTaskShortcut")
+    static let deleteTaskShortcut = Notification.Name("deleteTaskShortcut")
+    static let backToTasksShortcut = Notification.Name("backToTasksShortcut")
+}
+
 @main
 struct ClaudeCronApp: App {
     @State private var cliMode = false
@@ -86,6 +95,46 @@ struct ClaudeCronApp: App {
         }
         .modelContainer(Self.sharedContainer)
         .commands {
+            CommandGroup(replacing: .newItem) {
+                Button("New Task") {
+                    NotificationCenter.default.post(name: .newTaskShortcut, object: nil)
+                }
+                .keyboardShortcut("n", modifiers: .command)
+            }
+
+            CommandMenu("Task") {
+                Button("Run Now") {
+                    NotificationCenter.default.post(name: .runTaskShortcut, object: nil)
+                }
+                .keyboardShortcut("r", modifiers: .command)
+
+                Button("Save") {
+                    NotificationCenter.default.post(name: .saveTaskShortcut, object: nil)
+                }
+                .keyboardShortcut("s", modifiers: .command)
+
+                Divider()
+
+                Button("Toggle Enabled") {
+                    NotificationCenter.default.post(name: .toggleTaskShortcut, object: nil)
+                }
+                .keyboardShortcut("e", modifiers: .command)
+
+                Divider()
+
+                Button("Delete Task") {
+                    NotificationCenter.default.post(name: .deleteTaskShortcut, object: nil)
+                }
+                .keyboardShortcut(.delete, modifiers: .command)
+
+                Divider()
+
+                Button("Back to Tasks") {
+                    NotificationCenter.default.post(name: .backToTasksShortcut, object: nil)
+                }
+                .keyboardShortcut(.escape, modifiers: [])
+            }
+
             CommandGroup(replacing: .help) {
                 Button("Check for Updates...") {
                     updateService.checkForUpdates()

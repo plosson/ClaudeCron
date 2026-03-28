@@ -58,9 +58,9 @@ struct ContentView: View {
     private func taskCard(for task: ClaudeTask) -> some View {
         TaskCardView(task: task)
             .onTapGesture {
-                        showRuns = !task.runs.isEmpty
-                        selectedTask = task
-                    }
+                showRuns = !task.runs.isEmpty
+                selectedTask = task
+            }
             .contextMenu {
                 Button("Run Now") {
                     LaunchdService.shared.triggerNow(task: task, modelContext: modelContext)
@@ -94,6 +94,7 @@ struct ContentView: View {
                         }
                         .buttonStyle(.plain)
                         .foregroundStyle(Color.accentColor)
+                        .help("Back to tasks (Esc)")
 
                         Spacer()
 
@@ -174,7 +175,9 @@ struct ContentView: View {
                             }
                         } label: {
                             Image(systemName: "plus")
+                                .foregroundStyle(.purple)
                         }
+                        .help("Create")
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 12)
@@ -234,6 +237,33 @@ struct ContentView: View {
             if !cliPromptDismissed && !CLIInstallService.isInstalled {
                 showingCLIPrompt = true
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .newTaskShortcut)) { _ in
+            showingNewTask = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .backToTasksShortcut)) { _ in
+            selectedTask = nil
+            showRuns = false
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .runTaskShortcut)) { _ in
+            guard let task = selectedTask else { return }
+            if !task.runs.contains(where: { $0.runStatus == .running }) {
+                LaunchdService.shared.triggerNow(task: task, modelContext: modelContext)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .toggleTaskShortcut)) { _ in
+            guard let task = selectedTask else { return }
+            task.isEnabled.toggle()
+            do { try modelContext.save() } catch {}
+            LaunchdService.shared.install(task: task)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .deleteTaskShortcut)) { _ in
+            guard let task = selectedTask else { return }
+            removeFromJSON(task: task)
+            LaunchdService.shared.uninstall(task: task)
+            modelContext.delete(task)
+            try? modelContext.save()
+            selectedTask = nil
         }
         .alert("Install Command Line Tool?", isPresented: $showingCLIPrompt) {
             Button("Install") {
@@ -359,7 +389,13 @@ struct StatusPill: View {
     var body: some View {
         HStack(spacing: 4) {
             Circle()
-                .fill(color)
+                .fill(
+                    LinearGradient(
+                        colors: [color, color.opacity(0.7)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
                 .frame(width: 6, height: 6)
             Text("\(count) \(label)")
                 .font(.caption)
@@ -367,7 +403,13 @@ struct StatusPill: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(color.opacity(0.1))
+        .background(
+            LinearGradient(
+                colors: [color.opacity(0.12), color.opacity(0.06)],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        )
         .clipShape(Capsule())
     }
 }

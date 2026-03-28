@@ -3,6 +3,8 @@ import SwiftUI
 struct TaskCardView: View {
     let task: ClaudeTask
     @State private var breatheOpacity: Double = 0.4
+    @State private var isHovered = false
+    @State private var isPressed = false
 
     private var isRunning: Bool {
         task.runs.contains { $0.runStatus == .running }
@@ -29,7 +31,13 @@ struct TaskCardView: View {
             // Colored left border for running/failed states
             if isRunning || hasFailed {
                 RoundedRectangle(cornerRadius: 2)
-                    .fill(statusColor)
+                    .fill(
+                        LinearGradient(
+                            colors: [statusColor, statusColor.opacity(0.5)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
                     .frame(width: 3)
                     .padding(.vertical, 8)
             }
@@ -38,7 +46,13 @@ struct TaskCardView: View {
                 // Top row: status dot + name + model badge
                 HStack(spacing: 8) {
                     Circle()
-                        .fill(statusColor)
+                        .fill(
+                            LinearGradient(
+                                colors: [statusColor, statusColor.opacity(0.7)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                         .frame(width: 8, height: 8)
                         .opacity(isRunning ? breatheOpacity : 1.0)
                         .animation(
@@ -62,9 +76,10 @@ struct TaskCardView: View {
 
                     Text(task.model)
                         .font(.caption2)
+                        .foregroundStyle(.cyan)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(.secondary.opacity(0.15))
+                        .background(.cyan.opacity(0.12))
                         .clipShape(RoundedRectangle(cornerRadius: 4))
                 }
 
@@ -100,11 +115,17 @@ struct TaskCardView: View {
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(.ultraThinMaterial)
-                .shadow(color: .black.opacity(0.06), radius: 8)
+                .shadow(color: .black.opacity(isHovered ? 0.12 : 0.06), radius: isHovered ? 12 : 8)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .strokeBorder(.secondary.opacity(0.1), lineWidth: 0.5)
+                .strokeBorder(.secondary.opacity(isHovered ? 0.2 : 0.1), lineWidth: 0.5)
         )
+        .scaleEffect(isPressed ? 0.98 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isHovered)
+        .animation(.spring(response: 0.2, dampingFraction: 0.6), value: isPressed)
+        .onHover { hovering in
+            isHovered = hovering
+        }
     }
 }
