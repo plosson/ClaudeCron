@@ -376,12 +376,19 @@ struct TaskDetailView: View {
             task.promptFile = promptFile
         }
 
+        // Generate taskId from name if not yet set (new task)
+        if task.taskId.isEmpty {
+            task.taskId = task.name.lowercased()
+                .replacingOccurrences(of: " ", with: "-")
+                .replacingOccurrences(of: "[^a-z0-9-]", with: "", options: .regularExpression)
+            if task.taskId.isEmpty { task.taskId = UUID().uuidString }
+        }
+
         do { try modelContext.save() } catch {
             print("[ClaudeCron] Failed to save: \(error.localizedDescription)")
         }
         LaunchdService.shared.install(task: task)
         persistToJSON()
-
     }
 
     private func toggleEnabled() {

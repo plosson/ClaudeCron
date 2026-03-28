@@ -5,7 +5,6 @@ import UserNotifications
 struct ContentView: View {
     @Query(sort: \ClaudeTask.createdAt, order: .reverse) private var tasks: [ClaudeTask]
     @State private var selectedTask: ClaudeTask?
-    @State private var showingNewTask = false
     @State private var showingCLIPrompt = false
     @AppStorage("cliPromptDismissed") private var cliPromptDismissed = false
     @Environment(\.modelContext) private var modelContext
@@ -163,7 +162,7 @@ struct ContentView: View {
                         .help("Settings")
 
                         Menu {
-                            Button(action: { showingNewTask = true }) {
+                            Button(action: createNewTask) {
                                 Label("New Task", systemImage: "doc.badge.plus")
                             }
                             .keyboardShortcut("n", modifiers: .command)
@@ -212,25 +211,6 @@ struct ContentView: View {
             }
         }
         .frame(minWidth: 700, minHeight: 460)
-        // New task sheet
-        .sheet(isPresented: $showingNewTask) {
-            TaskFormView(
-                onSave: { task in
-                    if task.sourceFolder != NSHomeDirectory() {
-                        folderRegistry.add(task.sourceFolder)
-                    }
-                    modelContext.insert(task)
-                    do { try modelContext.save() } catch {
-                        print("[ClaudeCron] Failed to save context on insert: \(error.localizedDescription)")
-                    }
-                    LaunchdService.shared.install(task: task)
-                    persistToJSON(task: task)
-                    showingNewTask = false
-                },
-                onCancel: { showingNewTask = false }
-            )
-            .frame(minWidth: 450, minHeight: 500)
-        }
         .onAppear {
             UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
             resyncAll()
@@ -239,7 +219,7 @@ struct ContentView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .newTaskShortcut)) { _ in
-            showingNewTask = true
+            createNewTask()
         }
         .onReceive(NotificationCenter.default.publisher(for: .backToTasksShortcut)) { _ in
             selectedTask = nil
@@ -278,6 +258,14 @@ struct ContentView: View {
         } message: {
             Text("Would you like to install the ccron command line tool? This lets you run tasks from your terminal.")
         }
+    }
+
+    private func createNewTask() {
+        let task = ClaudeTask()
+        task.sourceFolder = NSHomeDirectory()
+        modelContext.insert(task)
+        showRuns = false
+        selectedTask = task
     }
 
     private func addFolder() {
