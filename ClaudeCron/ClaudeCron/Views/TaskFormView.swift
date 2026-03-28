@@ -39,10 +39,18 @@ struct TaskFormView: View {
             HStack {
                 Text("New Task")
                     .font(.headline)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.purple, .pink],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
                 Spacer()
                 Button("Cancel", action: onCancel)
                 Button("Save") { save() }
                     .buttonStyle(.borderedProminent)
+                    .tint(.purple)
                     .disabled(name.isEmpty || directory.isEmpty || conflictWarning != nil || {
                         switch promptSource {
                         case .inline, .command: return prompt.isEmpty
@@ -117,6 +125,7 @@ struct TaskFormView: View {
                             Button(action: browsePromptFile) {
                                 Image(systemName: "doc")
                             }
+                            .help("Browse for prompt file")
                         }
                         if !promptFile.isEmpty && !directory.isEmpty {
                             let fullPath = URL(fileURLWithPath: directory).appendingPathComponent(promptFile).path
@@ -144,6 +153,7 @@ struct TaskFormView: View {
                             Button(action: browseDirectory) {
                                 Image(systemName: "folder")
                             }
+                            .help("Browse for directory")
                         }
                     }
 

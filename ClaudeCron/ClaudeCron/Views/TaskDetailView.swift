@@ -37,6 +37,7 @@ struct TaskDetailView: View {
                     .buttonStyle(.bordered)
                     .tint(.red)
                     .controlSize(.small)
+                    .help("Stop running task")
                 } else {
                     Button(action: { LaunchdService.shared.triggerNow(task: task, modelContext: modelContext) }) {
                         Label("Run", systemImage: "play.fill")
@@ -44,6 +45,7 @@ struct TaskDetailView: View {
                     .buttonStyle(.bordered)
                     .tint(.green)
                     .controlSize(.small)
+                    .help("Run task now (Cmd+R)")
                 }
 
                 Toggle(isOn: $task.isEnabled) {
@@ -51,6 +53,7 @@ struct TaskDetailView: View {
                 }
                 .toggleStyle(.switch)
                 .controlSize(.small)
+                .help("Toggle enabled (Cmd+E)")
                 .onChange(of: task.isEnabled) { _, _ in
                     do { try modelContext.save() } catch {}
                     LaunchdService.shared.install(task: task)
@@ -69,13 +72,14 @@ struct TaskDetailView: View {
                 Button("Save") { saveTask() }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
+                    .help("Save changes (Cmd+S)")
 
                 Button(action: deleteTask) {
                     Image(systemName: "trash")
                         .foregroundStyle(.red)
                 }
                 .buttonStyle(.plain)
-                .help("Delete")
+                .help("Delete task (Cmd+Delete)")
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
@@ -111,6 +115,7 @@ struct TaskDetailView: View {
                                     }
                                 }
                                 .buttonStyle(.bordered)
+                                .tint(.cyan)
                                 .controlSize(.small)
                                 .disabled(statusMessage != nil)
                                 .help("Generate with AI")
@@ -129,6 +134,7 @@ struct TaskDetailView: View {
                                 }
                                 .buttonStyle(.bordered)
                                 .controlSize(.small)
+                                .help("Browse for directory")
                             }
                         }
 
@@ -166,6 +172,7 @@ struct TaskDetailView: View {
                                     }
                                     .buttonStyle(.bordered)
                                     .controlSize(.small)
+                                    .help("Browse for prompt file")
                                 }
                                 if !promptFile.isEmpty && !task.directory.isEmpty {
                                     let fullPath = URL(fileURLWithPath: task.directory).appendingPathComponent(promptFile).path
@@ -301,6 +308,9 @@ struct TaskDetailView: View {
             }
         }
         .onAppear { loadPromptState() }
+        .onReceive(NotificationCenter.default.publisher(for: .saveTaskShortcut)) { _ in
+            saveTask()
+        }
     }
 
     private func loadPromptState() {
@@ -443,7 +453,13 @@ struct FormSection<Content: View>: View {
             HStack(spacing: 6) {
                 Image(systemName: icon)
                     .font(.caption)
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color.accentColor, Color.accentColor.opacity(0.7)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
                 Text(title.uppercased())
                     .font(.caption.bold())
                     .tracking(0.5)
@@ -492,15 +508,37 @@ struct FormField<Content: View>: View {
 struct RunRowView: View {
     let run: TaskRun
 
+    private var statusIcon: String {
+        switch run.runStatus {
+        case .succeeded: return "checkmark.circle.fill"
+        case .failed: return "xmark.circle.fill"
+        case .running: return "circle.dotted"
+        case .cancelled: return "stop.circle.fill"
+        }
+    }
+
+    private var statusColor: Color {
+        switch run.runStatus {
+        case .succeeded: return .green
+        case .failed: return .red
+        case .running: return .blue
+        case .cancelled: return .orange
+        }
+    }
+
     var body: some View {
-        HStack {
+        HStack(spacing: 8) {
+            Image(systemName: statusIcon)
+                .foregroundStyle(statusColor)
+                .font(.caption)
+
             Text(run.startedAt, format: .dateTime.month().day().hour().minute().second())
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Spacer()
             Text(run.runStatus.rawValue)
                 .font(.caption2.bold())
-                .foregroundStyle(run.runStatus == .succeeded ? .green : run.runStatus == .failed ? .red : .blue)
+                .foregroundStyle(statusColor)
             if let d = run.duration {
                 Text("\(Int(d))s")
                     .font(.caption)
